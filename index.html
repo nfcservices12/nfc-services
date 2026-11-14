@@ -305,7 +305,7 @@ footer .adm{color:#7d85b3;font-size:14px}
     <label>Seu nome<input name="name" required minlength="2" maxlength="120" autocomplete="name"></label>
     <label>Empresa (opcional)<input name="company" maxlength="160" autocomplete="organization"></label>
     <label>WhatsApp ou e-mail<input name="contact" required minlength="5" maxlength="160" inputmode="email"></label>
-    <label>Serviço<select name="service_id"><option value="">Ainda não sei</option></select></label>
+    <label>Serviço<select name="service_id"><option value="">Escolha um serviço</option></select></label>
     <label>O que você precisa<textarea name="description" rows="4" maxlength="2000"></textarea></label>
     <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
     <button class="btn blue" id="leadBtn" type="submit">Enviar pedido</button>
@@ -395,15 +395,15 @@ async function load() {
       ${x.estimated_time ? `<p>Prazo estimado: ${esc(x.estimated_time)}</p>` : ""}
       <div class="price">${x.price != null ? `${brl(x.price)} <small>${BILL[x.billing_model] || ""}</small>` : "Sob consulta"}</div>
     </article>`).join("");
-    $("select[name=service_id]").insertAdjacentHTML("beforeend", services.map((x) => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join(""));
+    $("select[name=service_id]").insertAdjacentHTML("beforeend", services.map((x) => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join("") + `<option value="cat:Outro">Outro</option>`);
   } else if ((ct.data || []).length) {
     // Sem serviços publicados ainda: mostra as categorias cadastradas.
     $("#cats").hidden = false;
     $("#cats").innerHTML = ct.data.map((c) => `<li><a href="#orcamento" data-cat="${esc(c.name)}">${esc(c.name)}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a></li>`).join("");
+    $("select[name=service_id]").insertAdjacentHTML("beforeend", ct.data.map((c) => `<option value="cat:${esc(c.name)}">${esc(c.name)}</option>`).join("") + `<option value="cat:Outro">Outro</option>`);
     $("#cats").addEventListener("click", (e) => {
       const a = e.target.closest("[data-cat]"); if (!a) return;
-      const t = $("textarea[name=description]");
-      if (!t.value.trim() || t.dataset.auto) { t.value = "Tenho interesse em: " + a.dataset.cat + ". "; t.dataset.auto = "1"; }
+      $("select[name=service_id]").value = "cat:" + a.dataset.cat;
     });
   } else {
     $("#servicesLead").textContent = "Fale com a gente para conhecer os serviços.";
@@ -419,7 +419,6 @@ async function load() {
 load().catch(() => { $("#servicesLead").textContent = "Não foi possível carregar os serviços agora. Recarregue a página ou peça o orçamento abaixo."; });
 
 const form = $("#leadForm"), msg = $("#leadMsg"), btn = $("#leadBtn");
-$("textarea[name=description]").addEventListener("input", (e) => { delete e.target.dataset.auto; });
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = Object.fromEntries(new FormData(form));
@@ -427,8 +426,11 @@ form.addEventListener("submit", async (e) => {
   if (f.website) return say("Pedido enviado.", true); // armadilha para robôs
   if (f.name.trim().length < 2) { form.elements.name.focus(); return say("Escreva seu nome para a gente saber com quem falar."); }
   if (f.contact.trim().length < 5) { form.elements.contact.focus(); return say("Informe um WhatsApp ou e-mail para a gente responder."); }
+  // Categoria (sem serviço publicado) vai escrita na descrição do pedido.
+  const isCat = f.service_id.startsWith("cat:");
+  const desc = [isCat ? "Serviço: " + f.service_id.slice(4) : "", f.description.trim()].filter(Boolean).join("\n");
   btn.disabled = true; btn.textContent = "Enviando…";
-  const { error } = await sb.from("leads").insert({ name: f.name.trim(), company: f.company.trim() || null, contact: f.contact.trim(), service_id: f.service_id || null, description: f.description.trim() || null, source: "site" });
+  const { error } = await sb.from("leads").insert({ name: f.name.trim(), company: f.company.trim() || null, contact: f.contact.trim(), service_id: isCat ? null : f.service_id || null, description: desc || null, source: "site" });
   btn.disabled = false; btn.textContent = "Enviar pedido";
   if (error) return say("O pedido não foi enviado. Tente de novo ou chame no WhatsApp.");
   form.reset(); say("Pedido enviado. Vamos responder pelo contato que você informou.", true);
