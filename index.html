@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NFC Services — Sites, cardápios e catálogos digitais</title>
+<meta name="description" content="A NFC Services desenvolve e mantém sites, cardápios digitais, catálogos e sistemas para empresas. Peça seu orçamento.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&family=Lora:ital,wght@1,500&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#151413;--ink2:#22211f;--cream:#f3eee5;--paper:#fcfaf6;--acc:#e8552b;--mut:#7d776e;--line:#ddd6ca;--r:18px}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font-family:Inter,system-ui,sans-serif;background:var(--cream);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+header{position:sticky;top:0;z-index:20;background:rgba(243,238,229,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
+.logo{font-weight:900;letter-spacing:-.02em;font-size:20px;text-decoration:none;display:flex;align-items:center;gap:10px}
+.logo img{height:34px;border-radius:8px}
+.logo span{color:var(--acc);font-family:Lora,serif;font-style:italic;font-weight:500}
+nav a{text-decoration:none;font-size:14px;font-weight:500;margin-left:22px;color:var(--ink2)}
+nav a.cta{background:var(--ink);color:var(--cream);padding:10px 16px;border-radius:99px}
+@media(max-width:760px){nav a:not(.cta){display:none}}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.hero{padding:72px 0 64px}
+.hero h1{font-size:clamp(40px,9vw,84px);line-height:.98;letter-spacing:-.04em;font-weight:900;margin:18px 0 22px}
+.hero h1 em{font-family:Lora,serif;font-weight:500;color:var(--acc);letter-spacing:-.02em}
+.hero p{font-size:clamp(17px,2.4vw,21px);color:var(--ink2);max-width:640px}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:15px 24px;border-radius:99px;font-weight:600;text-decoration:none;border:2px solid var(--ink);cursor:pointer;font:inherit;font-weight:600;transition:transform .15s}
+.btn:hover{transform:translateY(-2px)}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.d{background:var(--ink);color:var(--cream)}
+.btn.o{background:transparent}
+section{padding:64px 0;border-top:1px solid var(--line)}
+section.dark{background:var(--ink);color:var(--cream);border:0}
+section.dark .mono{color:#9a948a}
+h2{font-size:clamp(30px,5.5vw,48px);letter-spacing:-.035em;line-height:1.05;font-weight:900;margin:12px 0 30px}
+h2 em{font-family:Lora,serif;font-weight:500;color:var(--acc)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:24px;display:flex;flex-direction:column;gap:10px}
+.dark .card{background:var(--ink2);border-color:#34322f}
+.card img{width:100%;aspect-ratio:16/10;object-fit:cover;border-radius:12px;background:var(--line)}
+.card h3{font-size:20px;letter-spacing:-.02em}
+.card p{color:var(--mut);font-size:15px}
+.dark .card p{color:#b3ada3}
+.tag{font-size:12px;font-weight:600;color:var(--acc);text-transform:uppercase;letter-spacing:.08em}
+.card ul{padding-left:18px;font-size:14px;color:var(--ink2)}
+.price{margin-top:auto;padding-top:10px;font-weight:800;font-size:18px}
+.price small{font-weight:500;color:var(--mut);font-size:13px}
+.num{font-weight:900;font-size:44px;color:var(--acc);letter-spacing:-.04em;line-height:1}
+blockquote{font-family:Lora,serif;font-style:italic;font-size:19px}
+details{border-bottom:1px solid var(--line);padding:18px 0}
+summary{font-weight:600;font-size:18px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:12px}
+summary::after{content:"+";color:var(--acc);font-weight:800}
+details[open] summary::after{content:"–"}
+details p{margin-top:10px;color:var(--ink2)}
+form{display:grid;gap:14px;max-width:640px}
+label{font-size:14px;font-weight:600;display:grid;gap:6px}
+input,select,textarea{font:inherit;padding:14px;border-radius:12px;border:1px solid #45423e;background:#1c1b1a;color:var(--cream);width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);border-color:transparent}
+.hp{position:absolute;left:-9999px}
+.msg{padding:14px 16px;border-radius:12px;font-weight:500}
+.msg.ok{background:#1f3a2a;color:#b9f0cd}.msg.err{background:#4a1f1a;color:#ffc9be}
+footer{padding:40px 0;font-size:14px;color:var(--mut)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between}
+.wa{position:fixed;right:18px;bottom:18px;z-index:30;background:#1faa59;color:#fff;border-radius:99px;padding:14px 18px;font-weight:700;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+[hidden]{display:none!important}
+.reveal{opacity:0;transform:translateY(14px);transition:.6s}.reveal.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <a class="logo" href="#top"><img id="logo" hidden alt=""><b id="brand">NFC <span>Services</span></b></a>
+  <nav><a href="#servicos">Serviços</a><a href="#portfolio" data-nav="portfolio" hidden>Portfólio</a><a href="#processo">Como funciona</a><a href="#faq" data-nav="faq" hidden>Dúvidas</a><a class="cta" href="#orcamento">Pedir orçamento</a></nav>
+</div></header>
+
+<main id="top">
+<div class="wrap hero">
+  <div class="mono">Soluções digitais para empresas</div>
+  <h1 id="heroTitle">Seu negócio <em>online</em>, bonito e sempre atualizado.</h1>
+  <p id="tagline"></p>
+  <div class="btns"><a class="btn p" href="#orcamento">Pedir orçamento →</a><a class="btn o" id="waHero" target="_blank" rel="noopener" hidden>Falar no WhatsApp</a></div>
+</div>
+
+<section id="sobre"><div class="wrap">
+  <div class="mono">Quem somos</div><h2>Tecnologia que <em>trabalha</em> pelo seu negócio.</h2>
+  <p id="about" style="max-width:720px;font-size:18px"></p>
+  <div class="grid" style="margin-top:34px">
+    <div class="card"><h3>Feito sob medida</h3><p>Cada projeto é criado com a identidade da sua marca, nada de modelo pronto igual ao de todo mundo.</p></div>
+    <div class="card"><h3>Atualização por nossa conta</h3><p>Mudou o preço, o produto ou o horário? A gente atualiza para você, sem complicação.</p></div>
+    <div class="card"><h3>Pensado para o celular</h3><p>Tudo abre rápido e funciona bem na tela em que seus clientes realmente estão.</p></div>
+    <div class="card"><h3>NFC e QR Code</h3><p>Seu cliente aproxima o celular ou aponta a câmera e chega direto ao seu cardápio, catálogo ou site.</p></div>
+  </div>
+</div></section>
+
+<section id="servicos"><div class="wrap">
+  <div class="mono">O que fazemos</div><h2>Serviços</h2>
+  <div class="grid" id="services"></div>
+  <p id="servicesEmpty" class="mono" hidden>Sob consulta — fale com a gente para conhecer os serviços.</p>
+</div></section>
+
+<section id="portfolio" hidden><div class="wrap">
+  <div class="mono">Projetos realizados</div><h2>Portfólio</h2><div class="grid" id="portfolioGrid"></div>
+</div></section>
+
+<section id="depoimentos" hidden><div class="wrap">
+  <div class="mono">Quem já contratou</div><h2>Depoimentos</h2><div class="grid" id="testimonials"></div>
+</div></section>
+
+<section id="processo"><div class="wrap">
+  <div class="mono">Como funciona</div><h2>Do pedido à <em>entrega</em> em 4 passos.</h2>
+  <div class="grid">
+    <div class="card"><div class="num">01</div><h3>Você pede o orçamento</h3><p>Conte o que precisa pelo formulário ou pelo WhatsApp.</p></div>
+    <div class="card"><div class="num">02</div><h3>A gente entende o negócio</h3><p>Conversamos sobre objetivo, prazo e conteúdo e enviamos a proposta.</p></div>
+    <div class="card"><div class="num">03</div><h3>Desenvolvimento</h3><p>Criamos o projeto e você acompanha e aprova antes de publicar.</p></div>
+    <div class="card"><div class="num">04</div><h3>No ar e com manutenção</h3><p>Publicamos e seguimos cuidando das atualizações quando você precisar.</p></div>
+  </div>
+</div></section>
+
+<section id="faq" hidden><div class="wrap"><div class="mono">Perguntas frequentes</div><h2>Dúvidas</h2><div id="faqs"></div></div></section>
+
+<section id="orcamento" class="dark"><div class="wrap">
+  <div class="mono">Sem compromisso</div><h2>Peça seu <em>orçamento</em>.</h2>
+  <form id="leadForm" novalidate>
+    <label>Seu nome *<input name="name" required minlength="2" maxlength="120" autocomplete="name"></label>
+    <label>Empresa<input name="company" maxlength="160" autocomplete="organization"></label>
+    <label>WhatsApp ou e-mail *<input name="contact" required minlength="5" maxlength="160"></label>
+    <label>Serviço desejado<select name="service_id"><option value="">Ainda não sei / outro</option></select></label>
+    <label>Conte o que você precisa<textarea name="description" rows="4" maxlength="2000"></textarea></label>
+    <input class="hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button class="btn p" id="leadBtn" type="submit">Enviar pedido →</button>
+    <div id="leadMsg" class="msg" hidden role="status"></div>
+  </form>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <div><b id="fName">NFC Services</b><div id="fAddr"></div></div>
+  <div><a id="fInsta" target="_blank" rel="noopener" hidden></a> <span id="fMail"></span></div>
+  <div>© <span id="yr"></span> · <a href="admin.html">Área administrativa</a></div>
+</div></footer>
+<a class="wa" id="waFloat" target="_blank" rel="noopener" hidden>WhatsApp</a>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const sb = createClient("https://mlsgcvsxaxznbxisyqut.supabase.co", "sb_publishable_jXlSZf1lHatkf5y81tlfRQ_thgs_mCf", { auth: { persistSession: false } });
+const $ = (s) => document.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const safeUrl = (u) => (/^https?:\/\//i.test(u || "") ? u : "");
+const brl = (n) => Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const BILL = { unico: "pagamento único", mensal: "por mês", sob_consulta: "" };
+$("#yr").textContent = new Date().getFullYear();
+
+async function load() {
+  const [st, sv, pf, ts, fq, bn] = await Promise.all([
+    sb.from("settings").select("*").eq("id", 1).maybeSingle(),
+    sb.from("services").select("*, service_categories(name, sort)").eq("published", true).order("sort"),
+    sb.from("portfolio_items").select("*").eq("published", true).order("sort"),
+    sb.from("testimonials").select("*").eq("published", true).order("sort"),
+    sb.from("faqs").select("*").eq("published", true).order("sort"),
+    sb.from("banners").select("*").eq("published", true).order("sort").limit(1),
+  ]);
+  const s = st.data || {};
+  if (s.company_name) { $("#fName").textContent = s.company_name; }
+  if (safeUrl(s.logo_url)) { $("#logo").src = s.logo_url; $("#logo").hidden = false; }
+  $("#tagline").textContent = s.tagline || "";
+  $("#about").textContent = s.about || "";
+  $("#fAddr").textContent = s.address || "";
+  $("#fMail").textContent = s.email || "";
+  if (s.theme && /^#[0-9a-f]{6}$/i.test(s.theme.accent || "")) document.documentElement.style.setProperty("--acc", s.theme.accent);
+  if (s.whatsapp) {
+    const wa = "https://wa.me/" + String(s.whatsapp).replace(/\D/g, "") + "?text=" + encodeURIComponent("Olá! Vim pelo site e quero um orçamento.");
+    for (const id of ["#waHero", "#waFloat"]) { $(id).href = wa; $(id).hidden = false; }
+  }
+  if (s.instagram) { const h = String(s.instagram).replace(/^@/, ""); $("#fInsta").href = "https://instagram.com/" + encodeURIComponent(h); $("#fInsta").textContent = "@" + h; $("#fInsta").hidden = false; }
+  const b = bn.data?.[0];
+  if (b) { $("#heroTitle").textContent = b.title; if (b.subtitle) $("#tagline").textContent = b.subtitle; }
+
+  const services = sv.data || [];
+  $("#servicesEmpty").hidden = services.length > 0;
+  $("#services").innerHTML = services.map((x) => `<article class="card reveal">
+    ${safeUrl(x.image_url) ? `<img src="${esc(x.image_url)}" alt="" loading="lazy">` : ""}
+    ${x.service_categories ? `<div class="tag">${esc(x.service_categories.name)}</div>` : ""}
+    <h3>${esc(x.name)}</h3><p>${esc(x.description)}</p>
+    ${x.benefits?.length ? `<ul>${x.benefits.map((i) => `<li>${esc(i)}</li>`).join("")}</ul>` : ""}
+    ${x.estimated_time ? `<p>Prazo estimado: ${esc(x.estimated_time)}</p>` : ""}
+    <div class="price">${x.price != null ? `${brl(x.price)} <small>${BILL[x.billing_model] || ""}</small>` : "Sob consulta"}</div>
+  </article>`).join("");
+  $("select[name=service_id]").insertAdjacentHTML("beforeend", services.map((x) => `<option value="${esc(x.id)}">${esc(x.name)}</option>`).join(""));
+
+  const show = (id, list, html) => { if (!list.length) return; $(id).hidden = false; document.querySelectorAll(`[data-nav="${id.slice(1)}"]`).forEach((a) => (a.hidden = false)); return html; };
+  if (show("#portfolio", pf.data || [], 1)) $("#portfolioGrid").innerHTML = pf.data.map((x) => `<article class="card reveal">
+    ${safeUrl(x.image_url) ? `<img src="${esc(x.image_url)}" alt="" loading="lazy">` : ""}${x.category ? `<div class="tag">${esc(x.category)}</div>` : ""}
+    <h3>${esc(x.title)}</h3><p>${esc(x.description)}</p>${safeUrl(x.link) ? `<a href="${esc(x.link)}" target="_blank" rel="noopener">Ver projeto →</a>` : ""}</article>`).join("");
+  if (show("#depoimentos", ts.data || [], 1)) $("#testimonials").innerHTML = ts.data.map((x) => `<figure class="card reveal"><blockquote>“${esc(x.content)}”</blockquote><figcaption><b>${esc(x.author)}</b>${x.company ? ` · ${esc(x.company)}` : ""}</figcaption></figure>`).join("");
+  if (show("#faq", fq.data || [], 1)) $("#faqs").innerHTML = fq.data.map((x) => `<details><summary>${esc(x.question)}</summary><p>${esc(x.answer)}</p></details>`).join("");
+  const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && e.target.classList.add("in")), { threshold: 0.1 });
+  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+}
+load().catch(() => { $("#tagline").textContent = "Sites, cardápios e catálogos digitais para o seu negócio."; });
+
+const form = $("#leadForm"), msg = $("#leadMsg"), btn = $("#leadBtn");
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData(form));
+  const say = (t, ok) => { msg.textContent = t; msg.className = "msg " + (ok ? "ok" : "err"); msg.hidden = false; };
+  if (f.website) return say("Pedido enviado!", true); // armadilha para robôs
+  if (f.name.trim().length < 2) return say("Informe seu nome.");
+  if (f.contact.trim().length < 5) return say("Informe um WhatsApp ou e-mail para retorno.");
+  btn.disabled = true; btn.textContent = "Enviando…";
+  const { error } = await sb.from("leads").insert({ name: f.name.trim(), company: f.company.trim() || null, contact: f.contact.trim(), service_id: f.service_id || null, description: f.description.trim() || null, source: "site" });
+  btn.disabled = false; btn.textContent = "Enviar pedido →";
+  if (error) return say("Não foi possível enviar agora. Tente de novo ou chame no WhatsApp.");
+  form.reset(); say("Pedido recebido! Vamos entrar em contato em breve.", true);
+});
+</script>
+</body>
+</html>

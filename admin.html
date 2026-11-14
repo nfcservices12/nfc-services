@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Painel — NFC Services</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#151413;--ink2:#22211f;--bg:#f5f2ec;--paper:#fff;--acc:#e8552b;--mut:#7d776e;--line:#e4dfd5;--ok:#1d8a4e;--warn:#b7791f;--bad:#c53030;--r:14px}
+*{box-sizing:border-box;margin:0}
+body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:var(--paper);font-weight:600;cursor:pointer;color:var(--ink);text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:#bbb4a7}.btn:disabled{opacity:.55;cursor:wait}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff}.btn.d{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.sm{padding:6px 10px;font-size:13px}.btn.danger{color:var(--bad)}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);border-color:transparent}
+input[type=checkbox]{width:auto}
+label{display:grid;gap:5px;font-size:13px;font-weight:600;color:var(--ink2)}
+label.chk{display:flex;align-items:center;gap:8px}
+/* auth */
+#auth{min-height:100vh;display:grid;place-items:center;padding:20px;background:var(--ink)}
+.authbox{background:var(--paper);border-radius:20px;padding:30px;width:100%;max-width:400px;display:grid;gap:14px}
+.authbox h1{font-size:24px;letter-spacing:-.03em}.authbox h1 span{color:var(--acc)}
+.authbox .links{display:flex;justify-content:space-between;font-size:13px}
+.authbox a{color:var(--acc);cursor:pointer}
+.note{font-size:13px;padding:10px 12px;border-radius:10px;background:#fdf1ec;color:#8a3415}
+.note.ok{background:#e8f6ee;color:#145c36}
+/* layout */
+#app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+aside{background:var(--ink);color:#e9e4da;padding:20px 14px;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:4px}
+aside .brand{font-weight:800;font-size:18px;letter-spacing:-.02em;padding:4px 10px 16px}aside .brand span{color:var(--acc)}
+aside .grp{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8d877d;padding:14px 10px 6px}
+aside a{display:block;padding:9px 10px;border-radius:9px;color:#d8d2c7;text-decoration:none;font-weight:500;font-size:14px}
+aside a:hover{background:#2a2927}aside a.on{background:var(--acc);color:#fff}
+aside .me{margin-top:auto;padding:14px 10px 0;font-size:13px;color:#a9a399;border-top:1px solid #2f2d2a}
+main{padding:26px;min-width:0}
+.top{display:none}
+@media(max-width:860px){#app{grid-template-columns:1fr}aside{position:fixed;inset:0 auto 0 0;width:260px;z-index:40;transform:translateX(-100%);transition:.2s}aside.open{transform:none}
+ .top{display:flex;align-items:center;gap:12px;background:var(--ink);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:30;font-weight:700}main{padding:16px}}
+.head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:18px}
+.head h1{font-size:26px;letter-spacing:-.03em}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.tools input,.tools select{width:auto;min-width:150px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi .l{font-size:12px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.06em}.kpi .v{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-top:4px}
+.kpi .s{font-size:12px;color:var(--mut)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:14px}
+h2{font-size:16px;margin-bottom:12px}
+.tw{overflow:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid #f0ece4;vertical-align:middle}
+tr:last-child td{border-bottom:0}tr.click{cursor:pointer}tr.click:hover{background:#faf8f3}
+td.act{white-space:nowrap;text-align:right}
+.empty{padding:34px;text-align:center;color:var(--mut)}
+.pill{display:inline-block;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:600;background:#efebe3;color:var(--ink2);white-space:nowrap}
+.pill.g{background:#e3f4ea;color:#156a3c}.pill.y{background:#fdf3d7;color:#8a5a00}.pill.r{background:#fde5e1;color:#a52a1a}.pill.b{background:#e4edfb;color:#1d4f9c}
+.board{display:flex;gap:12px;overflow:auto;padding-bottom:10px;align-items:flex-start}
+.lane{min-width:250px;width:250px;background:#ece8df;border-radius:var(--r);padding:10px;flex-shrink:0}
+.lane h3{font-size:13px;display:flex;justify-content:space-between;padding:4px 4px 10px}
+.tk{background:var(--paper);border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid var(--line);cursor:pointer;display:grid;gap:6px;font-size:14px}
+.tk small{color:var(--mut)}.tk select{padding:6px 8px;font-size:13px}
+#modal{position:fixed;inset:0;background:rgba(20,18,16,.55);z-index:60;display:grid;place-items:center;padding:14px;overflow:auto}
+.mbox{background:var(--paper);border-radius:18px;padding:22px;width:100%;max-width:620px;max-height:92vh;overflow:auto;display:grid;gap:14px}
+.mbox h2{font-size:20px;margin:0}.mbox form{display:grid;gap:12px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:560px){.row2{grid-template-columns:1fr}}
+.mfoot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:80;background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-weight:500;max-width:90vw}
+#toast.err{background:var(--bad)}
+.hist{display:grid;gap:8px}.hist div{padding:10px 12px;background:#f7f4ee;border-radius:10px;font-size:14px}.hist small{color:var(--mut);display:block}
+.dl{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;font-size:14px}.dl dt{color:var(--mut)}
+.bars{display:flex;align-items:flex-end;gap:10px;height:170px;padding-top:10px}
+.bars .b{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;font-size:11px;color:var(--mut)}
+.bars .b i{display:block;width:100%;border-radius:6px 6px 0 0;background:var(--acc);min-height:2px}.bars .b i.e{background:#c9c3b8}
+.bars .pair{display:flex;gap:3px;align-items:flex-end;width:100%;height:100%}
+.loading{padding:40px;text-align:center;color:var(--mut)}
+img.th{width:44px;height:44px;object-fit:cover;border-radius:8px;background:var(--line)}
+</style>
+</head>
+<body>
+<div id="auth"><div class="authbox">
+  <h1>NFC <span>Services</span></h1>
+  <div id="authTitle" style="font-weight:600">Entrar no painel</div>
+  <form id="authForm" style="display:grid;gap:12px">
+    <label id="fName" hidden>Nome<input name="full_name" maxlength="120"></label>
+    <label id="fEmail">E-mail<input name="email" type="email" required autocomplete="email"></label>
+    <label id="fPass">Senha<input name="password" type="password" minlength="8" autocomplete="current-password"></label>
+    <button class="btn p" id="authBtn">Entrar</button>
+  </form>
+  <div id="authMsg" class="note" hidden></div>
+  <div class="links"><a data-mode="signup">Criar conta</a><a data-mode="forgot">Esqueci a senha</a><a data-mode="login" hidden>Voltar ao login</a></div>
+</div></div>
+
+<div id="app" hidden>
+  <aside id="side"></aside>
+  <div><div class="top"><button class="btn sm" id="menuBtn">☰</button><span>NFC Services</span></div><main id="view"></main></div>
+</div>
+<div id="modal" hidden></div><div id="toast" hidden></div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const sb = createClient("https://mlsgcvsxaxznbxisyqut.supabase.co", "sb_publishable_jXlSZf1lHatkf5y81tlfRQ_thgs_mCf");
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const brl = (n) => Number(n || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const fdate = (d) => (d ? new Date(String(d).length <= 10 ? d + "T12:00:00" : d).toLocaleDateString("pt-BR") : "—");
+const today = () => new Date().toLocaleDateString("sv-SE");
+const ym = (d) => String(d).slice(0, 7);
+const safeUrl = (u) => (/^https?:\/\//i.test(u || "") ? u : "");
+let me = null, recovering = false;
+const isMgr = () => ["admin", "manager"].includes(me?.role), isAdmin = () => me?.role === "admin";
+
+function toast(t, err) { const el = $("#toast"); el.textContent = t; el.className = err ? "err" : ""; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (el.hidden = true), err ? 5000 : 2600); }
+const ERR = { "23503": "Não é possível excluir: existem registros vinculados.", "23505": "Já existe um registro com esse valor.", "42501": "Você não tem permissão para esta ação.", "23514": "Algum campo está com valor inválido." };
+async function run(p) { const { data, error } = await p; if (error) { const m = ERR[error.code] || error.message || "Erro inesperado."; toast(m, true); throw error; } return data; }
+function modal(html) { const m = $("#modal"); m.innerHTML = `<div class="mbox">${html}</div>`; m.hidden = false; return m.firstElementChild; }
+function closeModal() { $("#modal").hidden = true; $("#modal").innerHTML = ""; }
+$("#modal").addEventListener("click", (e) => { if (e.target.id === "modal" || e.target.dataset.close != null) closeModal(); });
+function confirmBox(text, okLabel = "Excluir") { return new Promise((res) => { const b = modal(`<h2>Confirmar</h2><p>${esc(text)}</p><div class="mfoot"><button class="btn" id="cNo">Cancelar</button><button class="btn d" id="cYes">${esc(okLabel)}</button></div>`); $("#cNo", b).onclick = () => { closeModal(); res(false); }; $("#cYes", b).onclick = () => { closeModal(); res(true); }; }); }
+
+/* ---------- rótulos ---------- */
+const L = {
+  lead: { novo: "Novo contato", primeiro_atendimento: "Primeiro atendimento", negociacao: "Em negociação", orcamento_enviado: "Orçamento enviado", aguardando_aprovacao: "Aguardando aprovação", fechado: "Fechado", perdido: "Perdido" },
+  project: { aguardando_inicio: "Aguardando início", em_desenvolvimento: "Em desenvolvimento", em_revisao: "Em revisão", aguardando_cliente: "Aguardando cliente", concluido: "Concluído", suspenso: "Suspenso" },
+  client: { prospecto: "Prospecto", ativo: "Ativo", inativo: "Inativo" },
+  quote: { rascunho: "Rascunho", enviado: "Enviado", aprovado: "Aprovado", recusado: "Recusado", expirado: "Expirado" },
+  bill: { unico: "Pagamento único", mensal: "Mensal", sob_consulta: "Sob consulta" },
+  pay: { em_dia: "Em dia", pendente: "Pendente", atrasado: "Atrasado" },
+  sub: { ativa: "Ativa", pausada: "Pausada", cancelada: "Cancelada" },
+  mkind: { manutencao: "Manutenção", atualizacao: "Atualização de conteúdo", correcao: "Correção", melhoria: "Melhoria" },
+  mstatus: { aberta: "Aberta", em_andamento: "Em andamento", concluida: "Concluída" },
+  tkind: { receita: "Receita", despesa: "Despesa" },
+  role: { admin: "Administrador", manager: "Gerente", collaborator: "Colaborador" },
+};
+const COLOR = { fechado: "g", concluido: "g", concluida: "g", aprovado: "g", ativa: "g", ativo: "g", em_dia: "g", perdido: "r", recusado: "r", atrasado: "r", cancelada: "r", suspenso: "r", pendente: "y", aberta: "y", enviado: "b", orcamento_enviado: "b", em_desenvolvimento: "b", em_andamento: "b", novo: "y" };
+const pill = (map, v) => `<span class="pill ${COLOR[v] || ""}">${esc(map[v] || v || "—")}</span>`;
+const opts = (map) => Object.entries(map);
+const yes = (v) => (v ? '<span class="pill g">Publicado</span>' : '<span class="pill">Oculto</span>');
+
+/* ---------- módulos genéricos ---------- */
+const pubFields = [{ k: "published", l: "Publicado no site", t: "check" }, { k: "sort", l: "Ordem", t: "number", d: 0 }];
+const MOD = {
+  services: { title: "Serviços", table: "services", sel: "*, service_categories(name)", order: "sort", mgr: true, search: ["name"],
+    cols: [["Serviço", (r) => `<b>${esc(r.name)}</b>`], ["Categoria", (r) => esc(r.service_categories?.name || "—")], ["Preço", (r) => (r.price != null ? brl(r.price) : "—")], ["Cobrança", (r) => esc(L.bill[r.billing_model])], ["Site", (r) => yes(r.published)]],
+    fields: [{ k: "name", l: "Nome", req: true }, { k: "category_id", l: "Categoria", t: "ref", ref: "service_categories" }, { k: "description", l: "Descrição", t: "area" }, { k: "image_url", l: "Imagem", t: "image" },
+      { k: "price", l: "Preço (opcional)", t: "money" }, { k: "billing_model", l: "Modelo de cobrança", t: "select", o: opts(L.bill), d: "sob_consulta" }, { k: "estimated_time", l: "Prazo estimado" }, { k: "benefits", l: "Benefícios (um por linha)", t: "lines" }, ...pubFields] },
+  categories: { title: "Categorias de serviço", table: "service_categories", order: "sort", mgr: true, search: ["name"], cols: [["Categoria", (r) => esc(r.name)], ["Ordem", (r) => r.sort]], fields: [{ k: "name", l: "Nome", req: true }, { k: "sort", l: "Ordem", t: "number", d: 0 }] },
+  portfolio: { title: "Portfólio", table: "portfolio_items", order: "sort", mgr: true, search: ["title"],
+    cols: [["", (r) => (safeUrl(r.image_url) ? `<img class="th" src="${esc(r.image_url)}" alt="">` : "")], ["Projeto", (r) => `<b>${esc(r.title)}</b>`], ["Categoria", (r) => esc(r.category || "—")], ["Site", (r) => yes(r.published)]],
+    fields: [{ k: "title", l: "Título", req: true }, { k: "description", l: "Descrição", t: "area" }, { k: "category", l: "Categoria" }, { k: "image_url", l: "Imagem", t: "image" }, { k: "link", l: "Link do projeto", t: "url" }, ...pubFields] },
+  testimonials: { title: "Depoimentos", table: "testimonials", order: "sort", mgr: true, search: ["author"], cols: [["Autor", (r) => `<b>${esc(r.author)}</b>`], ["Empresa", (r) => esc(r.company || "—")], ["Depoimento", (r) => esc((r.content || "").slice(0, 80))], ["Site", (r) => yes(r.published)]],
+    fields: [{ k: "author", l: "Nome do cliente", req: true }, { k: "company", l: "Empresa" }, { k: "content", l: "Depoimento", t: "area", req: true }, ...pubFields] },
+  faqs: { title: "Perguntas frequentes", table: "faqs", order: "sort", mgr: true, search: ["question"], cols: [["Pergunta", (r) => `<b>${esc(r.question)}</b>`], ["Site", (r) => yes(r.published)]], fields: [{ k: "question", l: "Pergunta", req: true }, { k: "answer", l: "Resposta", t: "area", req: true }, ...pubFields] },
+  banners: { title: "Banner principal", table: "banners", order: "sort", mgr: true, search: ["title"], cols: [["Título", (r) => `<b>${esc(r.title)}</b>`], ["Subtítulo", (r) => esc(r.subtitle || "—")], ["Site", (r) => yes(r.published)]],
+    fields: [{ k: "title", l: "Título (substitui a frase principal do site)", req: true }, { k: "subtitle", l: "Subtítulo", t: "area" }, ...pubFields] },
+  clients: { title: "Clientes", table: "clients", order: "name", mgr: true, search: ["name", "contact_name", "email", "phone"], filter: { k: "status", map: L.client }, rowLink: (r) => `#/clients/${r.id}`,
+    cols: [["Cliente", (r) => `<b>${esc(r.name)}</b>`], ["Responsável", (r) => esc(r.contact_name || "—")], ["Contato", (r) => esc(r.whatsapp || r.phone || r.email || "—")], ["Desde", (r) => fdate(r.created_at)], ["Status", (r) => pill(L.client, r.status)]],
+    fields: [{ k: "name", l: "Nome ou razão social", req: true }, { k: "contact_name", l: "Responsável" }, { k: "email", l: "E-mail", t: "email" }, { k: "phone", l: "Telefone" }, { k: "whatsapp", l: "WhatsApp" }, { k: "document", l: "CPF/CNPJ (opcional)" }, { k: "address", l: "Endereço (opcional)" },
+      { k: "status", l: "Status do relacionamento", t: "select", o: opts(L.client), d: "ativo" }, { k: "notes", l: "Observações internas", t: "area" }] },
+  quotes: { title: "Orçamentos", table: "quotes", sel: "*, clients(name), leads(name)", order: "created_at", desc: true, mgr: true, filter: { k: "status", map: L.quote },
+    cols: [["Nº", (r) => `#${r.number}`], ["Para", (r) => esc(r.clients?.name || r.leads?.name || "—")], ["Total", (r) => brl(r.total)], ["Validade", (r) => fdate(r.valid_until)], ["Status", (r) => pill(L.quote, r.status)]],
+    fields: [{ k: "client_id", l: "Cliente", t: "ref", ref: "clients" }, { k: "lead_id", l: "Lead", t: "ref", ref: "leads" }, { k: "items", l: "Itens (um por linha: descrição | valor)", t: "items", req: true }, { k: "conditions", l: "Condições", t: "area" }, { k: "valid_until", l: "Validade", t: "date" }, { k: "status", l: "Status", t: "select", o: opts(L.quote), d: "rascunho" }],
+    before: (v) => { v.total = (v.items || []).reduce((s, i) => s + Number(i.v || 0), 0); } },
+  subscriptions: { title: "Assinaturas", table: "subscriptions", sel: "*, clients(name), services(name)", order: "next_billing", mgr: true, filter: { k: "status", map: L.sub }, rowClick: (r) => subDetail(r.id),
+    cols: [["Cliente", (r) => `<b>${esc(r.clients?.name)}</b>`], ["Serviço", (r) => esc(r.services?.name || r.description || "—")], ["Mensal", (r) => brl(r.monthly_value)], ["Próx. cobrança", (r) => fdate(r.next_billing)], ["Pagamento", (r) => pill(L.pay, r.payment_status)], ["Status", (r) => pill(L.sub, r.status)]],
+    fields: [{ k: "client_id", l: "Cliente", t: "ref", ref: "clients", req: true }, { k: "service_id", l: "Serviço", t: "ref", ref: "services" }, { k: "description", l: "Descrição" }, { k: "monthly_value", l: "Valor mensal", t: "money", req: true }, { k: "start_date", l: "Início", t: "date", d: today },
+      { k: "next_billing", l: "Próxima cobrança", t: "date" }, { k: "payment_status", l: "Situação do pagamento", t: "select", o: opts(L.pay), d: "em_dia" }, { k: "status", l: "Status", t: "select", o: opts(L.sub), d: "ativa" }],
+    after: async (row, old) => { await sb.from("subscription_events").insert({ subscription_id: row.id, description: old ? `Assinatura alterada: ${brl(row.monthly_value)}/mês, ${L.sub[row.status]}, pagamento ${L.pay[row.payment_status]}` : `Assinatura criada: ${brl(row.monthly_value)}/mês` }); } },
+  maintenance: { title: "Manutenções", table: "maintenance_requests", sel: "*, clients(name)", order: "created_at", desc: true, filter: { k: "status", map: L.mstatus },
+    cols: [["Cliente", (r) => `<b>${esc(r.clients?.name)}</b>`], ["Tipo", (r) => esc(L.mkind[r.kind])], ["Solicitação", (r) => esc((r.description || "").slice(0, 70))], ["Aberta em", (r) => fdate(r.created_at)], ["Status", (r) => pill(L.mstatus, r.status)]],
+    fields: [{ k: "client_id", l: "Cliente", t: "ref", ref: "clients", req: true }, { k: "kind", l: "Tipo", t: "select", o: opts(L.mkind), d: "atualizacao" }, { k: "description", l: "O que foi solicitado / realizado", t: "area", req: true }, { k: "status", l: "Status", t: "select", o: opts(L.mstatus), d: "aberta" }],
+    before: (v, old) => { v.done_at = v.status === "concluida" ? old?.done_at || new Date().toISOString() : null; } },
+  transactions: { title: "Lançamentos", table: "transactions", sel: "*, clients(name), projects(name)", order: "due_date", desc: true, mgr: true,
+    fields: [{ k: "kind", l: "Tipo", t: "select", o: opts(L.tkind), d: "receita" }, { k: "description", l: "Descrição", req: true }, { k: "amount", l: "Valor", t: "money", req: true }, { k: "due_date", l: "Vencimento / data prevista", t: "date", d: today, req: true },
+      { k: "paid_at", l: "Data do pagamento (vazio = pendente)", t: "date" }, { k: "category", l: "Categoria" }, { k: "client_id", l: "Cliente", t: "ref", ref: "clients" }, { k: "project_id", l: "Projeto", t: "ref", ref: "projects" }] },
+  projects: { title: "Projetos", table: "projects", sel: "*, clients(name), services(name), profiles(full_name,email)", order: "due_date",
+    fields: [{ k: "client_id", l: "Cliente", t: "ref", ref: "clients", req: true }, { k: "name", l: "Nome do projeto", req: true }, { k: "description", l: "Descrição", t: "area" }, { k: "service_id", l: "Serviço contratado", t: "ref", ref: "services" }, { k: "value", l: "Valor negociado", t: "money", mgrOnly: true },
+      { k: "start_date", l: "Início", t: "date" }, { k: "due_date", l: "Prazo de entrega", t: "date" }, { k: "owner_id", l: "Responsável", t: "ref", ref: "profiles", label: "full_name" }, { k: "status", l: "Status", t: "select", o: opts(L.project), d: "aguardando_inicio" }, { k: "notes", l: "Observações", t: "area" }] },
+};
+const refCache = {};
+async function refs(table, label = "name") { const key = table + label; if (!refCache[key]) { const sel = table === "profiles" ? "id, full_name, email" : table === "leads" ? "id, name" : `id, ${label}`; const d = await run(sb.from(table).select(sel).order(label === "full_name" ? "email" : label)); refCache[key] = d.map((r) => ({ id: r.id, label: r[label] || r.email || r.name })); } return refCache[key]; }
+const bust = (table) => Object.keys(refCache).forEach((k) => k.startsWith(table) && delete refCache[k]);
+
+async function fieldHtml(f, row) {
+  const v = row?.[f.k] ?? (typeof f.d === "function" ? f.d() : f.d) ?? "", req = f.req ? "required" : "", n = `name="${f.k}"`;
+  if (f.t === "check") return `<label class="chk"><input type="checkbox" ${n} ${v ? "checked" : ""}> ${esc(f.l)}</label>`;
+  let inp;
+  if (f.t === "area") inp = `<textarea ${n} rows="3" ${req}>${esc(v)}</textarea>`;
+  else if (f.t === "lines") inp = `<textarea ${n} rows="4">${esc((v || []).join("\n"))}</textarea>`;
+  else if (f.t === "items") inp = `<textarea ${n} rows="4" ${req} placeholder="Site institucional | 1500">${esc((v || []).map((i) => `${i.d} | ${i.v}`).join("\n"))}</textarea>`;
+  else if (f.t === "select") inp = `<select ${n}>${f.o.map(([k, l]) => `<option value="${esc(k)}" ${k === v ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+  else if (f.t === "ref") { const list = await refs(f.ref, f.label); inp = `<select ${n} ${req}><option value="">—</option>${list.map((o) => `<option value="${esc(o.id)}" ${o.id === v ? "selected" : ""}>${esc(o.label)}</option>`).join("")}</select>`; }
+  else if (f.t === "image") inp = `<input type="hidden" ${n} value="${esc(v)}"><input type="file" accept="image/*" data-up="${f.k}">${safeUrl(v) ? `<img class="th" src="${esc(v)}" alt="">` : ""}`;
+  else inp = `<input ${n} ${req} value="${esc(v)}" type="${{ money: "number", number: "number", date: "date", email: "email", url: "url" }[f.t] || "text"}" ${f.t === "money" ? 'step="0.01" min="0"' : ""}>`;
+  return `<label>${esc(f.l)}${f.req ? " *" : ""}${inp}</label>`;
+}
+function readForm(fields, form) {
+  const out = {};
+  for (const f of fields) {
+    const el = form.elements[f.k]; if (!el) continue; let v = f.t === "check" ? el.checked : el.value.trim();
+    if (f.t === "lines") v = v.split("\n").map((s) => s.trim()).filter(Boolean);
+    else if (f.t === "items") { v = v.split("\n").map((s) => s.trim()).filter(Boolean).map((s) => { const i = s.lastIndexOf("|"); const val = i < 0 ? NaN : Number(s.slice(i + 1).trim().replace(/\./g, "").replace(",", ".")); return { d: (i < 0 ? s : s.slice(0, i)).trim(), v: val }; }); if (v.some((i) => !i.d || !isFinite(i.v) || i.v < 0)) throw new Error("Itens: use o formato “descrição | valor” em cada linha."); }
+    else if (f.t === "money" || f.t === "number") v = v === "" ? (f.t === "number" ? 0 : null) : Number(v);
+    else if (f.t !== "check" && v === "") v = null;
+    if (f.req && (v == null || v === "" || (Array.isArray(v) && !v.length))) throw new Error(`Preencha o campo “${f.l}”.`);
+    if (f.t === "url" && v && !safeUrl(v)) throw new Error("O link precisa começar com http:// ou https://");
+    out[f.k] = v;
+  }
+  return out;
+}
+async function openForm(key, row, preset = {}, done) {
+  const m = MOD[key], fields = m.fields.filter((f) => !f.mgrOnly || isMgr());
+  const box = modal(`<h2>${row ? "Editar" : "Novo"} — ${esc(m.title)}</h2><div class="loading">Carregando…</div>`);
+  const html = (await Promise.all(fields.map((f) => fieldHtml(f, row || preset)))).join("");
+  box.innerHTML = `<h2>${row ? "Editar" : "Novo"} — ${esc(m.title)}</h2><form>${html}<div class="mfoot"><button type="button" class="btn" data-close>Cancelar</button><button class="btn p">Salvar</button></div></form>`;
+  const form = $("form", box);
+  $$("[data-up]", form).forEach((inp) => (inp.onchange = async () => {
+    const file = inp.files[0]; if (!file) return; if (file.size > 5 * 1024 * 1024) return toast("Imagem maior que 5 MB.", true);
+    const path = `${key}/${crypto.randomUUID()}.${(file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+    toast("Enviando imagem…"); const { error } = await sb.storage.from("site").upload(path, file); if (error) return toast("Falha ao enviar a imagem.", true);
+    form.elements[inp.dataset.up].value = sb.storage.from("site").getPublicUrl(path).data.publicUrl; toast("Imagem enviada.");
+  }));
+  form.onsubmit = async (e) => {
+    e.preventDefault(); const btn = $("button.p", form);
+    try {
+      const v = readForm(fields, form); m.before?.(v, row); btn.disabled = true;
+      const saved = row ? await run(sb.from(m.table).update(v).eq("id", row.id).select().single()) : await run(sb.from(m.table).insert(v).select().single());
+      await m.after?.(saved, row); bust(m.table); closeModal(); toast("Salvo."); (done || route)();
+    } catch (err) { btn.disabled = false; if (!err.code) toast(err.message, true); }
+  };
+}
+async function removeRow(key, row, done) { if (!(await confirmBox("Excluir este registro? Esta ação não pode ser desfeita."))) return; await run(sb.from(MOD[key].table).delete().eq("id", row.id)); bust(MOD[key].table); toast("Excluído."); (done || route)(); }
+
+const view = () => $("#view");
+const loading = () => (view().innerHTML = '<div class="loading">Carregando…</div>');
+function tableHtml(cols, rows, actions) {
+  if (!rows.length) return '<div class="tw"><div class="empty">Nenhum registro ainda.</div></div>';
+  return `<div class="tw"><table><thead><tr>${cols.map((c) => `<th>${esc(c[0])}</th>`).join("")}${actions ? "<th></th>" : ""}</tr></thead><tbody>${rows.map((r, i) => `<tr data-i="${i}" class="${actions?.click ? "click" : ""}">${cols.map((c) => `<td>${c[1](r)}</td>`).join("")}${actions ? `<td class="act">${actions.html(r)}</td>` : ""}</tr>`).join("")}</tbody></table></div>`;
+}
+async function listView(key) {
+  const m = MOD[key]; loading();
+  let rows = await run(sb.from(m.table).select(m.sel || "*").order(m.order || "created_at", { ascending: !m.desc }));
+  const canEdit = !m.mgr || isMgr(); let term = "", flt = "";
+  const draw = () => {
+    const shown = rows.filter((r) => (!flt || r[m.filter.k] === flt) && (!term || (m.search || []).some((k) => String(r[k] || "").toLowerCase().includes(term))));
+    $("#list").innerHTML = tableHtml(m.cols, shown, { click: !!(m.rowLink || m.rowClick), html: () => (canEdit ? `<button class="btn sm" data-a="edit">Editar</button> <button class="btn sm danger" data-a="del">Excluir</button>` : "") });
+    $$("#list tr[data-i]").forEach((tr) => (tr.onclick = (e) => { const r = shown[tr.dataset.i], a = e.target.dataset.a; if (a === "edit") openForm(key, r); else if (a === "del") removeRow(key, r); else if (m.rowLink) location.hash = m.rowLink(r); else if (m.rowClick) m.rowClick(r); }));
+  };
+  view().innerHTML = `<div class="head"><h1>${esc(m.title)}</h1><div class="tools">${m.search ? '<input id="q" placeholder="Pesquisar…">' : ""}${m.filter ? `<select id="flt"><option value="">Todos</option>${opts(m.filter.map).map(([k, l]) => `<option value="${k}">${esc(l)}</option>`).join("")}</select>` : ""}${canEdit ? '<button class="btn p" id="add">+ Novo</button>' : ""}</div></div><div id="list"></div>`;
+  if ($("#q")) $("#q").oninput = (e) => { term = e.target.value.toLowerCase(); draw(); };
+  if ($("#flt")) $("#flt").onchange = (e) => { flt = e.target.value; draw(); };
+  if ($("#add")) $("#add").onclick = () => openForm(key);
+  draw();
+}
+
+/* ---------- dashboard ---------- */
+function months(n) { const out = [], d = new Date(); d.setDate(1); for (let i = n - 1; i >= 0; i--) { const x = new Date(d.getFullYear(), d.getMonth() - i, 1); out.push({ k: x.toLocaleDateString("sv-SE").slice(0, 7), l: x.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "") }); } return out; }
+function bars(ms, series) { const max = Math.max(1, ...series.flatMap((s) => ms.map((m) => s.v[m.k] || 0))); return `<div class="bars">${ms.map((m) => `<div class="b"><div class="pair">${series.map((s) => `<i class="${s.c || ""}" style="height:${((s.v[m.k] || 0) / max) * 100}%;flex:1" title="${esc(s.n)}: ${s.fmt(s.v[m.k] || 0)}"></i>`).join("")}</div>${esc(m.l)}</div>`).join("")}</div>`; }
+const kpi = (l, v, s = "") => `<div class="card kpi"><div class="l">${esc(l)}</div><div class="v">${v}</div><div class="s">${esc(s)}</div></div>`;
+async function dashboard() {
+  loading(); const cm = today().slice(0, 7);
+  const projects = await run(sb.from("projects").select("id,status,service_id,services(name),due_date,name,clients(name)"));
+  const active = projects.filter((p) => ["em_desenvolvimento", "em_revisao", "aguardando_cliente"].includes(p.status));
+  let html = `<div class="head"><h1>Visão geral</h1></div>`;
+  if (!isMgr()) { view().innerHTML = html + `<div class="kpis">${kpi("Projetos em andamento", active.length)}${kpi("Projetos concluídos", projects.filter((p) => p.status === "concluido").length)}</div><div class="card"><h2>Projetos em andamento</h2>${tableHtml([["Projeto", (r) => esc(r.name)], ["Cliente", (r) => esc(r.clients?.name)], ["Prazo", (r) => fdate(r.due_date)]], active)}</div>`; return; }
+  const [clients, leads, quotes, subs, tx] = await Promise.all([
+    run(sb.from("clients").select("id,created_at")), run(sb.from("leads").select("id,status,created_at")), run(sb.from("quotes").select("id,status")),
+    run(sb.from("subscriptions").select("id,status,monthly_value,service_id,services(name)")), run(sb.from("transactions").select("kind,amount,due_date,paid_at")),
+  ]);
+  const inc = tx.filter((t) => t.kind === "receita"), ms = months(6), rev = {}, cli = {};
+  inc.filter((t) => t.paid_at).forEach((t) => (rev[ym(t.paid_at)] = (rev[ym(t.paid_at)] || 0) + Number(t.amount)));
+  clients.forEach((c) => (cli[ym(c.created_at)] = (cli[ym(c.created_at)] || 0) + 1));
+  const act = subs.filter((s) => s.status === "ativa"), top = {};
+  [...projects, ...subs].forEach((x) => x.services?.name && (top[x.services.name] = (top[x.services.name] || 0) + 1));
+  const topList = Object.entries(top).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  html += `<div class="kpis">
+    ${kpi("Clientes", clients.length)}${kpi("Novos leads", leads.filter((l) => l.status === "novo").length, "aguardando atendimento")}
+    ${kpi("Orçamentos pendentes", quotes.filter((q) => q.status === "enviado").length)}${kpi("Projetos em andamento", active.length)}
+    ${kpi("Projetos concluídos", projects.filter((p) => p.status === "concluido").length)}${kpi("Receita do mês", brl(rev[cm] || 0), "recebida")}
+    ${kpi("Valores pendentes", brl(inc.filter((t) => !t.paid_at).reduce((s, t) => s + Number(t.amount), 0)), "a receber")}
+    ${kpi("Assinaturas ativas", act.length, brl(act.reduce((s, x) => s + Number(x.monthly_value), 0)) + " por mês")}</div>
+  <div class="cols"><div class="card"><h2>Receita recebida por mês</h2>${inc.some((t) => t.paid_at) ? bars(ms, [{ n: "Receita", v: rev, fmt: brl }]) : '<div class="empty">Sem pagamentos registrados ainda.</div>'}</div>
+  <div class="card"><h2>Novos clientes por mês</h2>${clients.length ? bars(ms, [{ n: "Clientes", v: cli, fmt: (n) => n }]) : '<div class="empty">Nenhum cliente cadastrado ainda.</div>'}</div></div>
+  <div class="card"><h2>Serviços mais contratados</h2>${topList.length ? tableHtml([["Serviço", (r) => esc(r[0])], ["Contratações", (r) => r[1]]], topList) : '<div class="empty">Aparece aqui quando houver projetos ou assinaturas vinculados a serviços.</div>'}</div>`;
+  view().innerHTML = html;
+}
+
+/* ---------- leads ---------- */
+async function leadsView() {
+  loading(); const rows = await run(sb.from("leads").select("*, services(name)").order("created_at", { ascending: false }));
+  view().innerHTML = `<div class="head"><h1>Leads</h1><div class="tools"><button class="btn p" id="add">+ Novo lead</button></div></div><div class="board">${opts(L.lead).map(([k, l]) => { const list = rows.filter((r) => r.status === k); return `<div class="lane"><h3>${esc(l)} <span>${list.length}</span></h3>${list.map((r) => `<div class="tk" data-id="${r.id}"><b>${esc(r.name)}</b><small>${esc(r.company || r.services?.name || "")}</small><small>${fdate(r.created_at)} · ${esc(r.source)}</small></div>`).join("") || '<small style="color:var(--mut);padding:4px">—</small>'}</div>`; }).join("")}</div>`;
+  $("#add").onclick = () => leadForm();
+  $$(".tk").forEach((el) => (el.onclick = () => leadDetail(rows.find((r) => r.id === el.dataset.id))));
+}
+const LEADF = [{ k: "name", l: "Nome", req: true }, { k: "company", l: "Empresa" }, { k: "contact", l: "Contato (WhatsApp ou e-mail)", req: true }, { k: "service_id", l: "Serviço desejado", t: "ref", ref: "services" }, { k: "description", l: "Necessidade", t: "area" }, { k: "source", l: "Origem do contato", d: "instagram" }];
+MOD.leads = { title: "Lead", table: "leads", fields: LEADF };
+const leadForm = (row) => openForm("leads", row);
+async function leadDetail(r) {
+  const notes = await run(sb.from("interactions").select("*").eq("lead_id", r.id).order("created_at", { ascending: false }));
+  const digits = r.contact.replace(/\D/g, ""), wa = digits.length >= 10 && !r.contact.includes("@") ? `https://wa.me/${digits.length <= 11 ? "55" + digits : digits}` : "";
+  const b = modal(`<h2>${esc(r.name)}</h2><dl class="dl"><dt>Empresa</dt><dd>${esc(r.company || "—")}</dd><dt>Contato</dt><dd>${esc(r.contact)} ${wa ? `<a href="${wa}" target="_blank" rel="noopener">abrir WhatsApp</a>` : ""}</dd><dt>Serviço</dt><dd>${esc(r.services?.name || "—")}</dd><dt>Necessidade</dt><dd>${esc(r.description || "—")}</dd><dt>Recebido</dt><dd>${fdate(r.created_at)} · origem: ${esc(r.source)}</dd></dl>
+    <label>Etapa<select id="st">${opts(L.lead).map(([k, l]) => `<option value="${k}" ${k === r.status ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+    <label>Nova observação<textarea id="nt" rows="2"></textarea></label><button class="btn sm" id="addNt">Adicionar observação</button>
+    <div class="hist">${notes.map((n) => `<div>${esc(n.content)}<small>${fdate(n.created_at)}</small></div>`).join("")}</div>
+    <div class="mfoot"><button class="btn sm danger" id="del" ${isAdmin() ? "" : "hidden"}>Excluir</button><button class="btn sm" id="edit">Editar</button><button class="btn sm" id="quote">Criar orçamento</button>${r.client_id ? `<a class="btn sm" href="#/clients/${r.client_id}" data-close>Ver cliente</a>` : '<button class="btn sm d" id="conv">Transformar em cliente</button>'}<button class="btn sm" data-close>Fechar</button></div>`);
+  $("#st", b).onchange = async (e) => { await run(sb.from("leads").update({ status: e.target.value }).eq("id", r.id)); await sb.from("interactions").insert({ lead_id: r.id, content: `Etapa alterada para “${L.lead[e.target.value]}”` }); toast("Etapa atualizada."); closeModal(); leadsView(); };
+  $("#addNt", b).onclick = async () => { const c = $("#nt", b).value.trim(); if (!c) return; await run(sb.from("interactions").insert({ lead_id: r.id, content: c })); leadDetail(r); };
+  $("#edit", b).onclick = () => leadForm(r);
+  $("#quote", b).onclick = () => openForm("quotes", null, { lead_id: r.id, client_id: r.client_id }, () => (location.hash = "#/quotes"));
+  $("#del", b).onclick = () => removeRow("leads", r);
+  if ($("#conv", b)) $("#conv", b).onclick = async () => {
+    if (!(await confirmBox(`Criar um cliente a partir de “${r.name}”?`, "Criar cliente"))) return;
+    const isMail = r.contact.includes("@");
+    const c = await run(sb.from("clients").insert({ name: r.company || r.name, contact_name: r.name, email: isMail ? r.contact : null, whatsapp: isMail ? null : r.contact, notes: r.description }).select().single());
+    await run(sb.from("leads").update({ client_id: c.id, status: "fechado" }).eq("id", r.id));
+    await sb.from("interactions").update({ client_id: c.id }).eq("lead_id", r.id);
+    await sb.from("interactions").insert({ client_id: c.id, lead_id: r.id, content: "Lead convertido em cliente" });
+    bust("clients"); toast("Cliente criado."); location.hash = `#/clients/${c.id}`;
+  };
+}
+
+/* ---------- cliente ---------- */
+async function clientDetail(id) {
+  loading(); const c = await run(sb.from("clients").select("*").eq("id", id).maybeSingle());
+  if (!c) return (view().innerHTML = '<div class="empty">Cliente não encontrado.</div>');
+  const mgr = isMgr(), none = Promise.resolve({ data: [] });
+  const [hist, proj, maint, subs, tx, quotes] = await Promise.all([
+    run(sb.from("interactions").select("*").eq("client_id", id).order("created_at", { ascending: false })), run(sb.from("projects").select("*").eq("client_id", id).order("created_at", { ascending: false })),
+    run(sb.from("maintenance_requests").select("*").eq("client_id", id).order("created_at", { ascending: false })),
+    run(mgr ? sb.from("subscriptions").select("*, services(name)").eq("client_id", id) : none), run(mgr ? sb.from("transactions").select("*").eq("client_id", id).order("due_date", { ascending: false }) : none), run(mgr ? sb.from("quotes").select("*").eq("client_id", id).order("created_at", { ascending: false }) : none),
+  ]);
+  view().innerHTML = `<div class="head"><h1>${esc(c.name)} ${pill(L.client, c.status)}</h1><div class="tools"><a class="btn" href="#/clients">← Clientes</a>${mgr ? '<button class="btn p" id="edit">Editar</button>' : ""}</div></div>
+  <div class="cols"><div class="card"><h2>Dados</h2><dl class="dl"><dt>Responsável</dt><dd>${esc(c.contact_name || "—")}</dd><dt>E-mail</dt><dd>${esc(c.email || "—")}</dd><dt>Telefone</dt><dd>${esc(c.phone || "—")}</dd><dt>WhatsApp</dt><dd>${esc(c.whatsapp || "—")}</dd><dt>CPF/CNPJ</dt><dd>${esc(c.document || "—")}</dd><dt>Endereço</dt><dd>${esc(c.address || "—")}</dd><dt>Cliente desde</dt><dd>${fdate(c.created_at)}</dd><dt>Observações</dt><dd>${esc(c.notes || "—")}</dd></dl></div>
+  <div class="card"><h2>Histórico de atendimento</h2><label>Registrar atendimento<textarea id="nt" rows="2"></textarea></label><button class="btn sm" id="addNt" style="margin:8px 0 12px">Adicionar</button><div class="hist">${hist.map((n) => `<div>${esc(n.content)}<small>${fdate(n.created_at)}</small></div>`).join("") || '<small style="color:var(--mut)">Sem registros.</small>'}</div></div></div>
+  <div class="card" style="margin-bottom:14px"><h2>Projetos <button class="btn sm" id="addP">+ Projeto</button></h2>${tableHtml([["Projeto", (r) => esc(r.name)], ["Prazo", (r) => fdate(r.due_date)], ["Status", (r) => pill(L.project, r.status)]], proj)}</div>
+  ${mgr ? `<div class="card" style="margin-bottom:14px"><h2>Assinaturas <button class="btn sm" id="addS">+ Assinatura</button></h2>${tableHtml([["Serviço", (r) => esc(r.services?.name || r.description || "—")], ["Mensal", (r) => brl(r.monthly_value)], ["Próx. cobrança", (r) => fdate(r.next_billing)], ["Status", (r) => pill(L.sub, r.status)]], subs)}</div>` : ""}
+  <div class="card" style="margin-bottom:14px"><h2>Manutenções <button class="btn sm" id="addM">+ Manutenção</button></h2>${tableHtml([["Tipo", (r) => esc(L.mkind[r.kind])], ["Descrição", (r) => esc(r.description)], ["Data", (r) => fdate(r.created_at)], ["Status", (r) => pill(L.mstatus, r.status)]], maint)}</div>
+  ${mgr ? `<div class="cols"><div class="card"><h2>Orçamentos</h2>${tableHtml([["Nº", (r) => `#${r.number}`], ["Total", (r) => brl(r.total)], ["Status", (r) => pill(L.quote, r.status)]], quotes)}</div>
+  <div class="card"><h2>Financeiro <button class="btn sm" id="addT">+ Lançamento</button></h2>${tableHtml([["Descrição", (r) => esc(r.description)], ["Valor", (r) => (r.kind === "despesa" ? "− " : "") + brl(r.amount)], ["Situação", (r) => (r.paid_at ? `<span class="pill g">Pago ${fdate(r.paid_at)}</span>` : `<span class="pill y">Previsto ${fdate(r.due_date)}</span>`)]], tx)}</div></div>` : ""}`;
+  const back = () => clientDetail(id), on = (s, fn) => $(s) && ($(s).onclick = fn);
+  on("#edit", () => openForm("clients", c, {}, back)); on("#addP", () => openForm("projects", null, { client_id: id }, back)); on("#addS", () => openForm("subscriptions", null, { client_id: id }, back));
+  on("#addM", () => openForm("maintenance", null, { client_id: id }, back)); on("#addT", () => openForm("transactions", null, { client_id: id }, back));
+  on("#addNt", async () => { const t = $("#nt").value.trim(); if (!t) return; await run(sb.from("interactions").insert({ client_id: id, content: t })); back(); });
+}
+
+/* ---------- projetos ---------- */
+let projMode = "kanban";
+async function projectsView() {
+  loading(); const rows = await run(sb.from("projects").select(MOD.projects.sel).order("due_date", { ascending: true, nullsFirst: false }));
+  const head = `<div class="head"><h1>Projetos</h1><div class="tools"><button class="btn ${projMode === "kanban" ? "d" : ""}" data-m="kanban">Kanban</button><button class="btn ${projMode === "list" ? "d" : ""}" data-m="list">Lista</button><button class="btn p" id="add">+ Novo</button></div></div>`;
+  const card = (r) => `<div class="tk" data-id="${r.id}"><b>${esc(r.name)}</b><small>${esc(r.clients?.name || "")}</small><small>Prazo: ${fdate(r.due_date)}</small><select data-st="${r.id}">${opts(L.project).map(([k, l]) => `<option value="${k}" ${k === r.status ? "selected" : ""}>${esc(l)}</option>`).join("")}</select></div>`;
+  view().innerHTML = head + (projMode === "kanban" ? `<div class="board">${opts(L.project).map(([k, l]) => { const list = rows.filter((r) => r.status === k); return `<div class="lane"><h3>${esc(l)} <span>${list.length}</span></h3>${list.map(card).join("") || '<small style="color:var(--mut);padding:4px">—</small>'}</div>`; }).join("")}</div>`
+    : tableHtml([["Projeto", (r) => `<b>${esc(r.name)}</b>`], ["Cliente", (r) => esc(r.clients?.name)], ["Responsável", (r) => esc(r.profiles?.full_name || r.profiles?.email || "—")], ["Prazo", (r) => fdate(r.due_date)], ["Status", (r) => pill(L.project, r.status)]], rows, { click: true, html: () => "" }));
+  $$("[data-m]").forEach((b) => (b.onclick = () => { projMode = b.dataset.m; projectsView(); }));
+  $("#add").onclick = () => openForm("projects");
+  $$("[data-st]").forEach((s) => { s.onclick = (e) => e.stopPropagation(); s.onchange = async () => { await run(sb.from("projects").update({ status: s.value }).eq("id", s.dataset.st)); toast("Status atualizado."); projectsView(); }; });
+  $$(".tk").forEach((el) => (el.onclick = () => projectDetail(rows.find((r) => r.id === el.dataset.id))));
+  $$("tr[data-i]").forEach((tr) => (tr.onclick = () => projectDetail(rows[tr.dataset.i])));
+}
+async function projectDetail(p) {
+  const files = await run(sb.from("project_files").select("*").eq("project_id", p.id).order("created_at")); let steps = Array.isArray(p.steps) ? p.steps : [];
+  const b = modal(`<h2>${esc(p.name)}</h2><dl class="dl"><dt>Cliente</dt><dd>${esc(p.clients?.name)}</dd><dt>Serviço</dt><dd>${esc(p.services?.name || "—")}</dd>${isMgr() ? `<dt>Valor</dt><dd>${p.value != null ? brl(p.value) : "—"}</dd>` : ""}<dt>Início</dt><dd>${fdate(p.start_date)}</dd><dt>Prazo</dt><dd>${fdate(p.due_date)}</dd><dt>Status</dt><dd>${pill(L.project, p.status)}</dd><dt>Descrição</dt><dd>${esc(p.description || "—")}</dd><dt>Observações</dt><dd>${esc(p.notes || "—")}</dd></dl>
+    <h2>Etapas</h2><div id="steps"></div><div class="row2"><input id="newStep" placeholder="Nova etapa"><button class="btn sm" id="addStep">Adicionar etapa</button></div>
+    <h2>Arquivos</h2><div class="hist">${files.map((f) => `<div><a href="#" data-f="${esc(f.path)}">${esc(f.name)}</a><small>${fdate(f.created_at)}</small></div>`).join("") || '<small style="color:var(--mut)">Nenhum arquivo.</small>'}</div><input type="file" id="up">
+    <div class="mfoot">${isMgr() ? '<button class="btn sm danger" id="del">Excluir</button>' : ""}<button class="btn sm" id="edit">Editar</button><button class="btn sm" data-close>Fechar</button></div>`);
+  const save = async () => { await run(sb.from("projects").update({ steps }).eq("id", p.id)); p.steps = steps; draw(); };
+  const draw = () => { $("#steps", b).innerHTML = steps.map((s, i) => `<label class="chk"><input type="checkbox" data-i="${i}" ${s.done ? "checked" : ""}> ${esc(s.t)}</label>`).join("") || '<small style="color:var(--mut)">Nenhuma etapa.</small>'; $$("#steps input", b).forEach((c) => (c.onchange = () => { steps[c.dataset.i].done = c.checked; save(); })); };
+  draw();
+  $("#addStep", b).onclick = () => { const t = $("#newStep", b).value.trim(); if (!t) return; steps = [...steps, { t, done: false }]; $("#newStep", b).value = ""; save(); };
+  $("#edit", b).onclick = () => openForm("projects", p, {}, projectsView);
+  if ($("#del", b)) $("#del", b).onclick = () => removeRow("projects", p, projectsView);
+  $$("[data-f]", b).forEach((a) => (a.onclick = async (e) => { e.preventDefault(); const { data, error } = await sb.storage.from("projetos").createSignedUrl(a.dataset.f, 120); if (error) return toast("Não foi possível abrir o arquivo.", true); window.open(data.signedUrl, "_blank", "noopener"); }));
+  $("#up", b).onchange = async (e) => { const file = e.target.files[0]; if (!file) return; if (file.size > 20 * 1024 * 1024) return toast("Arquivo maior que 20 MB.", true); const path = `${p.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]/g, "_")}`; toast("Enviando…"); const { error } = await sb.storage.from("projetos").upload(path, file); if (error) return toast("Falha no envio.", true); await run(sb.from("project_files").insert({ project_id: p.id, name: file.name, path })); toast("Arquivo enviado."); projectDetail(p); };
+}
+
+/* ---------- assinaturas ---------- */
+async function subDetail(id) {
+  const s = await run(sb.from("subscriptions").select("*, clients(name), services(name)").eq("id", id).single()), ev = await run(sb.from("subscription_events").select("*").eq("subscription_id", id).order("created_at", { ascending: false }));
+  const b = modal(`<h2>${esc(s.clients?.name)}</h2><dl class="dl"><dt>Serviço</dt><dd>${esc(s.services?.name || s.description || "—")}</dd><dt>Valor mensal</dt><dd>${brl(s.monthly_value)}</dd><dt>Início</dt><dd>${fdate(s.start_date)}</dd><dt>Próxima cobrança</dt><dd>${fdate(s.next_billing)}</dd><dt>Pagamento</dt><dd>${pill(L.pay, s.payment_status)}</dd><dt>Status</dt><dd>${pill(L.sub, s.status)}</dd></dl>
+  <p class="note">As cobranças são registradas manualmente. Não há cobrança automática.</p>
+  <div class="mfoot" style="justify-content:flex-start"><button class="btn sm d" id="bill">Lançar cobrança do mês</button><button class="btn sm" id="mnt">Registrar manutenção</button></div>
+  <h2>Histórico</h2><div class="hist">${ev.map((e) => `<div>${esc(e.description)}<small>${fdate(e.created_at)}</small></div>`).join("") || '<small style="color:var(--mut)">Sem registros.</small>'}</div><div class="mfoot"><button class="btn sm" data-close>Fechar</button></div>`);
+  $("#bill", b).onclick = async () => {
+    const due = s.next_billing || today(); if (!(await confirmBox(`Lançar receita prevista de ${brl(s.monthly_value)} com vencimento em ${fdate(due)}?`, "Lançar"))) return subDetail(id);
+    await run(sb.from("transactions").insert({ kind: "receita", description: `Mensalidade — ${s.services?.name || s.description || "assinatura"}`, amount: s.monthly_value, due_date: due, client_id: s.client_id, subscription_id: s.id, category: "Assinatura" }));
+    const d = new Date(due + "T12:00:00"); d.setMonth(d.getMonth() + 1); const next = d.toLocaleDateString("sv-SE");
+    await run(sb.from("subscriptions").update({ next_billing: next, payment_status: "pendente" }).eq("id", id)); await sb.from("subscription_events").insert({ subscription_id: id, description: `Cobrança de ${brl(s.monthly_value)} lançada (vencimento ${fdate(due)})` });
+    toast("Cobrança lançada no financeiro."); route();
+  };
+  $("#mnt", b).onclick = () => openForm("maintenance", null, { client_id: s.client_id }, async () => { await sb.from("subscription_events").insert({ subscription_id: id, description: "Manutenção registrada" }); route(); });
+}
+
+/* ---------- financeiro ---------- */
+let finMonth = today().slice(0, 7);
+async function financeView() {
+  loading(); const all = await run(sb.from("transactions").select(MOD.transactions.sel).order("due_date", { ascending: false }));
+  const inM = (d) => d && ym(d) === finMonth, sum = (a) => a.reduce((s, t) => s + Number(t.amount), 0), R = all.filter((t) => t.kind === "receita"), D = all.filter((t) => t.kind === "despesa");
+  const rec = sum(R.filter((t) => inM(t.paid_at))), prev = sum(R.filter((t) => !t.paid_at && inM(t.due_date))), desp = sum(D.filter((t) => inM(t.paid_at))), dprev = sum(D.filter((t) => !t.paid_at && inM(t.due_date)));
+  const ms = months(6), vin = {}, vout = {}; R.filter((t) => t.paid_at).forEach((t) => (vin[ym(t.paid_at)] = (vin[ym(t.paid_at)] || 0) + Number(t.amount))); D.filter((t) => t.paid_at).forEach((t) => (vout[ym(t.paid_at)] = (vout[ym(t.paid_at)] || 0) + Number(t.amount)));
+  const rows = all.filter((t) => inM(t.due_date) || inM(t.paid_at));
+  view().innerHTML = `<div class="head"><h1>Financeiro</h1><div class="tools"><input type="month" id="mon" value="${finMonth}"><button class="btn p" id="add">+ Lançamento</button></div></div>
+  <div class="kpis">${kpi("Receita recebida", brl(rec), "no mês")}${kpi("Receita prevista", brl(prev), "ainda não recebida")}${kpi("Despesas pagas", brl(desp), "no mês")}${kpi("Despesas previstas", brl(dprev))}${kpi("Saldo do mês", brl(rec - desp), "recebido − pago")}</div>
+  <div class="card" style="margin-bottom:14px"><h2>Fluxo de caixa — últimos 6 meses (laranja: entradas · cinza: saídas)</h2>${all.some((t) => t.paid_at) ? bars(ms, [{ n: "Entradas", v: vin, fmt: brl }, { n: "Saídas", v: vout, fmt: brl, c: "e" }]) : '<div class="empty">Sem pagamentos registrados ainda.</div>'}</div><div id="list"></div>`;
+  $("#list").innerHTML = tableHtml([["Data", (r) => fdate(r.paid_at || r.due_date)], ["Descrição", (r) => `<b>${esc(r.description)}</b>`], ["Cliente", (r) => esc(r.clients?.name || "—")], ["Tipo", (r) => esc(L.tkind[r.kind])], ["Valor", (r) => brl(r.amount)], ["Situação", (r) => (r.paid_at ? '<span class="pill g">Pago</span>' : '<span class="pill y">Previsto</span>')]], rows,
+    { html: (r) => `${r.paid_at ? "" : '<button class="btn sm" data-a="pay">Marcar pago</button> '}<button class="btn sm" data-a="edit">Editar</button> <button class="btn sm danger" data-a="del">Excluir</button>` });
+  $("#mon").onchange = (e) => { if (e.target.value) { finMonth = e.target.value; financeView(); } };
+  $("#add").onclick = () => openForm("transactions");
+  $$("#list tr[data-i]").forEach((tr) => (tr.onclick = async (e) => { const r = rows[tr.dataset.i], a = e.target.dataset.a; if (a === "edit") openForm("transactions", r); else if (a === "del") removeRow("transactions", r); else if (a === "pay") { await run(sb.from("transactions").update({ paid_at: today() }).eq("id", r.id)); toast("Marcado como pago."); financeView(); } }));
+}
+
+/* ---------- configurações e usuários ---------- */
+const SETF = [{ k: "company_name", l: "Nome da empresa", req: true }, { k: "logo_url", l: "Logotipo", t: "image" }, { k: "tagline", l: "Frase de posicionamento", t: "area" }, { k: "about", l: "Texto institucional", t: "area" }, { k: "email", l: "E-mail comercial", t: "email" }, { k: "whatsapp", l: "WhatsApp (com DDD)" }, { k: "instagram", l: "Instagram" }, { k: "address", l: "Endereço" }];
+async function settingsView() {
+  loading(); const s = await run(sb.from("settings").select("*").eq("id", 1).single());
+  view().innerHTML = `<div class="head"><h1>Configurações</h1></div><div class="card" style="max-width:640px"><form id="sf" style="display:grid;gap:12px">${(await Promise.all(SETF.map((f) => fieldHtml(f, s)))).join("")}<label>Cor de destaque do site<input type="color" name="accent" value="${esc(s.theme?.accent || "#e8552b")}" style="height:44px"></label><button class="btn p">Salvar</button></form></div>`;
+  const form = $("#sf");
+  $("[data-up]", form).onchange = async (e) => { const file = e.target.files[0]; if (!file) return; const path = `logo/${crypto.randomUUID()}.${(file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "")}`; const { error } = await sb.storage.from("site").upload(path, file); if (error) return toast("Falha ao enviar.", true); form.elements.logo_url.value = sb.storage.from("site").getPublicUrl(path).data.publicUrl; toast("Logotipo enviado. Salve para aplicar."); };
+  form.onsubmit = async (e) => { e.preventDefault(); try { const v = readForm(SETF, form); if (v.whatsapp) { const d = v.whatsapp.replace(/\D/g, ""); v.whatsapp = d.length <= 11 ? "55" + d : d; } v.theme = { ...(s.theme || {}), accent: form.elements.accent.value }; v.updated_at = new Date().toISOString(); await run(sb.from("settings").update(v).eq("id", 1)); toast("Configurações salvas."); } catch (err) { if (!err.code) toast(err.message, true); } };
+}
+async function usersView() {
+  loading(); const rows = await run(sb.from("profiles").select("*").order("created_at"));
+  view().innerHTML = `<div class="head"><h1>Usuários</h1></div><p class="note" style="margin-bottom:12px">Novos usuários criam a conta na tela de login e ficam sem acesso até você ativar aqui.</p>` + tableHtml([["Nome", (r) => `<b>${esc(r.full_name || "—")}</b>`], ["E-mail", (r) => esc(r.email)], ["Nível", (r) => `<select data-role="${r.id}" ${r.id === me.id ? "disabled" : ""}>${opts(L.role).map(([k, l]) => `<option value="${k}" ${k === r.role ? "selected" : ""}>${esc(l)}</option>`).join("")}</select>`], ["Acesso", (r) => `<label class="chk"><input type="checkbox" data-act="${r.id}" ${r.active ? "checked" : ""} ${r.id === me.id ? "disabled" : ""}> Ativo</label>`]], rows);
+  $$("[data-role]").forEach((s) => (s.onchange = async () => { await run(sb.from("profiles").update({ role: s.value }).eq("id", s.dataset.role)); toast("Nível atualizado."); }));
+  $$("[data-act]").forEach((c) => (c.onchange = async () => { await run(sb.from("profiles").update({ active: c.checked }).eq("id", c.dataset.act)); toast(c.checked ? "Acesso liberado." : "Acesso bloqueado."); }));
+}
+
+/* ---------- rotas ---------- */
+const NAV = [["", "Geral"], ["dashboard", "Visão geral", "all"], ["", "Comercial", "mgr"], ["leads", "Leads", "mgr"], ["quotes", "Orçamentos", "mgr"], ["clients", "Clientes", "all"], ["", "Operação"], ["projects", "Projetos", "all"], ["subscriptions", "Assinaturas", "mgr"], ["maintenance", "Manutenções", "all"], ["", "Financeiro", "mgr"], ["finance", "Financeiro", "mgr"],
+  ["", "Site", "mgr"], ["services", "Serviços", "mgr"], ["categories", "Categorias", "mgr"], ["portfolio", "Portfólio", "mgr"], ["testimonials", "Depoimentos", "mgr"], ["faqs", "Perguntas frequentes", "mgr"], ["banners", "Banner", "mgr"], ["", "Sistema", "admin"], ["settings", "Configurações", "admin"], ["users", "Usuários", "admin"]];
+const allowed = (lvl) => !lvl || lvl === "all" || (lvl === "mgr" && isMgr()) || (lvl === "admin" && isAdmin());
+const SPECIAL = { dashboard, leads: leadsView, projects: projectsView, finance: financeView, settings: settingsView, users: usersView };
+function drawNav(cur) { $("#side").innerHTML = `<div class="brand">NFC <span>Services</span></div>` + NAV.filter((n) => allowed(n[2])).map(([k, l]) => (k ? `<a href="#/${k}" class="${k === cur ? "on" : ""}">${esc(l)}</a>` : `<div class="grp">${esc(l)}</div>`)).join("") + `<div class="me">${esc(me.full_name || me.email)}<br>${esc(L.role[me.role])}<br><a href="index.html" target="_blank">Ver site</a><a href="#" id="out">Sair</a></div>`; $("#out").onclick = async (e) => { e.preventDefault(); await sb.auth.signOut(); }; }
+async function route() {
+  if (!me) return; closeModal(); $("#side").classList.remove("open");
+  const [key = "dashboard", id] = location.hash.replace(/^#\/?/, "").split("/"), k = key || "dashboard", nav = NAV.find((n) => n[0] === k);
+  if (!nav || !allowed(nav[2])) { location.hash = "#/dashboard"; return; }
+  drawNav(k);
+  try { if (k === "clients" && id) await clientDetail(id); else if (SPECIAL[k]) await SPECIAL[k](); else await listView(k); }
+  catch (err) { console.error(err); view().innerHTML = '<div class="empty">Não foi possível carregar esta tela. Verifique a conexão e tente de novo.</div>'; }
+}
+window.addEventListener("hashchange", route);
+$("#menuBtn").onclick = () => $("#side").classList.toggle("open");
+
+/* ---------- autenticação ---------- */
+let mode = "login", pendingMsg = "";
+const authMsg = (t, ok) => { const el = $("#authMsg"); el.textContent = t; el.className = "note" + (ok ? " ok" : ""); el.hidden = !t; };
+function setMode(m) {
+  mode = m; authMsg("");
+  $("#authTitle").textContent = { login: "Entrar no painel", signup: "Criar conta", forgot: "Recuperar senha", reset: "Definir nova senha" }[m];
+  $("#authBtn").textContent = { login: "Entrar", signup: "Criar conta", forgot: "Enviar link", reset: "Salvar nova senha" }[m];
+  $("#fName").hidden = m !== "signup"; $("#fEmail").hidden = m === "reset"; $("#fPass").hidden = m === "forgot";
+  $$(".links a").forEach((a) => (a.hidden = m === "reset" || a.dataset.mode === m || (m === "login" && a.dataset.mode === "login")));
+}
+$$(".links a").forEach((a) => (a.onclick = () => setMode(a.dataset.mode)));
+$("#authForm").onsubmit = async (e) => {
+  e.preventDefault(); const f = e.target.elements, btn = $("#authBtn"), email = f.email.value.trim(), password = f.password.value, here = location.origin + location.pathname;
+  if (mode !== "forgot" && password.length < 8) return authMsg("A senha precisa ter pelo menos 8 caracteres.");
+  btn.disabled = true; let r;
+  if (mode === "login") r = await sb.auth.signInWithPassword({ email, password });
+  else if (mode === "signup") r = await sb.auth.signUp({ email, password, options: { data: { full_name: f.full_name.value.trim() }, emailRedirectTo: here } });
+  else if (mode === "forgot") r = await sb.auth.resetPasswordForEmail(email, { redirectTo: here });
+  else r = await sb.auth.updateUser({ password });
+  btn.disabled = false;
+  if (r.error) return authMsg({ "Invalid login credentials": "E-mail ou senha incorretos.", "Email not confirmed": "Confirme seu e-mail pelo link que enviamos antes de entrar." }[r.error.message] || r.error.message);
+  if (mode === "signup" && !r.data.session) authMsg("Conta criada. Confirme pelo link enviado ao seu e-mail e depois entre.", true);
+  else if (mode === "forgot") authMsg("Se o e-mail estiver cadastrado, você receberá um link para criar uma nova senha.", true);
+  else if (mode === "reset") { recovering = false; toast("Senha alterada."); start((await sb.auth.getSession()).data.session); }
+};
+async function start(session) {
+  if (recovering) return;
+  if (!session) { me = null; $("#app").hidden = true; $("#auth").hidden = false; setMode("login"); if (pendingMsg) { authMsg(pendingMsg); pendingMsg = ""; } return; }
+  const { data } = await sb.from("profiles").select("*").eq("id", session.user.id).maybeSingle();
+  if (!data || !data.active) { me = null; $("#app").hidden = true; $("#auth").hidden = false; pendingMsg = "Sua conta ainda não foi liberada por um administrador."; await sb.auth.signOut(); return; }
+  me = data; $("#auth").hidden = true; $("#app").hidden = false; route();
+}
+sb.auth.onAuthStateChange((ev, session) => {
+  if (ev === "PASSWORD_RECOVERY") { recovering = true; $("#app").hidden = true; $("#auth").hidden = false; setMode("reset"); return; }
+  if (ev === "SIGNED_OUT") return start(null);
+  if (ev === "INITIAL_SESSION" || (ev === "SIGNED_IN" && !me)) setTimeout(() => start(session), 0);
+});
+</script>
+</body>
+</html>
