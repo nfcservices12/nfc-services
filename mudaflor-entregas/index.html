@@ -160,7 +160,7 @@ label.btn{display:inline-flex;align-items:center}
 .card .btn{margin-top:12px}
 #l-msg{color:var(--down);font-size:13px;min-height:1.2em}
 main[hidden]{display:none}
-.note[hidden],.btn[hidden]{display:none}
+.note[hidden],.btn[hidden],.field[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -378,6 +378,7 @@ function fetchAll(){
     .then(function(j){all=all.concat(j);return j.length===step?page(off+step):all})}
   return page(0);
 }
+function quemSou(){return api("/rest/v1/membros?select=papel,nome,cliente_codigo&limit=1").then(function(r){if(r.status===401)throw new Error("sessao");return r.ok?r.json():[]}).then(function(j){return j[0]||null})}
 function lastLoad(){return api("/rest/v1/cargas?select=criado_em,origem&order=criado_em.desc&limit=1").then(function(r){return r.ok?r.json():[]}).then(function(j){return j[0]||null},function(){return null})}
 function saveRows(rows){
   return api("/functions/v1/"+(CFG.fn||"ingest"),{method:"POST",body:JSON.stringify({origem:"planilha",linhas:rows})}).then(function(r){
@@ -385,7 +386,7 @@ function saveRows(rows){
 }
 
 /* ===== tela ===== */
-var DS=build([],"vazio"),N=0,pendente=false;
+var DS=build([],"vazio"),N=0,pendente=false,eu=null,semAcesso=false;
 var st={view:"por-cliente",cli:"",dia:"",q:"",zeros:false};
 function all(v){var a=[];for(var i=0;i<N;i++)a.push(v);return a}
 function add(a,b){for(var i=0;i<N;i++)a[i]+=b[i];return a}
@@ -460,12 +461,18 @@ function renderVariedade(data){
 }
 function note(){
   var n=$("note"),h="";
-  if(pendente)h='<span><b>Planilha carregada, ainda não salva.</b> Confira a grade e salve para toda a equipe ver.</span><button class="btn primary" type="button" id="salvar">Salvar no banco</button><button class="btn" type="button" id="descartar">Descartar</button>';
+  if(semAcesso)h="<span><b>Seu acesso ainda não foi liberado.</b> Peça à MudaFlor para autorizar este e-mail e entre de novo.</span>";
+  else if(pendente)h='<span><b>Planilha carregada, ainda não salva.</b> Confira a grade e salve para toda a equipe ver.</span><button class="btn primary" type="button" id="salvar">Salvar no banco</button><button class="btn" type="button" id="descartar">Descartar</button>';
   else if(DS.origem==="exemplo")h="<span><b>Dados de exemplo, fictícios.</b> Importe uma planilha para ver a sua programação nesta tela.</span>";
   else if(DS.origem==="planilha")h="<span><b>Dados da planilha importada.</b> Eles ficam só neste navegador e somem ao fechar a página.</span>";
-  else if(DS.origem==="banco"&&!N)h="<span><b>Aguardando os primeiros dados.</b> Assim que o sistema enviar a programação, ela aparece aqui. Você também pode importar uma planilha.</span>";
+  else if(DS.origem==="banco"&&!N)h="<span><b>Aguardando os primeiros dados.</b> Assim que a programação for enviada, ela aparece aqui."+(equipe()?" Você também pode importar uma planilha.":"")+"</span>";
   n.hidden=!h;n.innerHTML=h;
   if(pendente){$("salvar").addEventListener("click",salvar);$("descartar").addEventListener("click",function(){pendente=false;carregarBanco()})}
+}
+function equipe(){return !CFG.url||(eu&&eu.papel==="equipe")}
+function papeis(){
+  var e=equipe();
+  document.querySelector('label[for="arquivo"]').hidden=!e;$("f-cliente").hidden=!e&&DS.clientes.length<2;
 }
 function filtros(){
   var sel=$("f-cliente"),dias=[];
@@ -502,7 +509,7 @@ function show(ds,keep){
     if(DS.clientes.some(function(x){return ckey(x)===c})){st.cli=c;$("f-cliente").value=c}
     if(DS.clientes.some(function(x){return x.dia===d})){st.dia=d;$("f-dia").value=d}
   }else{$("f-busca").value="";st.q=""}
-  render();
+  papeis();render();
 }
 function tsv(){
   var L=[["Cliente","Tipo de pedido","Dia","Período","Código","Variedade"].concat(DS.weeks.map(function(w){return w.s+"/"+w.a})).join("\t")];
@@ -515,7 +522,8 @@ function tsv(){
 /* ===== ações ===== */
 function carregarBanco(quieto){
   if(!quieto)say("Carregando a programação…");
-  return Promise.all([fetchAll(),lastLoad()]).then(function(r){
+  return Promise.all([fetchAll(),lastLoad(),quemSou()]).then(function(r){
+    eu=r[2];semAcesso=!eu;
     var q=r[1]&&r[1].criado_em,novo=quieto&&q&&q!==DS.quando;
     if(!quieto)say("");show(build(r[0],"banco",q),quieto);
     if(novo)say("Programação atualizada com os dados mais recentes.",8000);
@@ -528,7 +536,7 @@ function salvar(){
   var b=$("salvar");b.disabled=true;say("Salvando…");
   saveRows(DS.rows).then(function(j){pendente=false;say("Programação salva: "+fmt(j.linhas||DS.rows.length)+" linhas.",6000);return carregarBanco()},function(e){b.disabled=false;say(e.message)});
 }
-function sair(){sess=null;saveSess();pendente=false;telas()}
+function sair(){sess=null;eu=null;semAcesso=false;saveSess();pendente=false;show(build([],"banco"));telas()}
 function telas(){
   var precisaLogin=!!CFG.url&&!sess;
   $("login").hidden=!precisaLogin;$("app").hidden=precisaLogin;$("sair").hidden=!CFG.url||!sess;$("recarregar").hidden=!CFG.url;
