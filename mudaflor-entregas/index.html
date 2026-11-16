@@ -160,6 +160,7 @@ label.btn{display:inline-flex;align-items:center}
 .card .btn{margin-top:12px}
 #l-msg{color:var(--down);font-size:13px;min-height:1.2em}
 main[hidden]{display:none}
+.note[hidden],.btn[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -213,6 +214,7 @@ main[hidden]{display:none}
     <select class="field" id="f-dia" aria-label="Dia da semana"></select>
     <div class="grow"><input class="field" id="f-busca" type="search" placeholder="Buscar variedade ou código" aria-label="Buscar variedade ou código"></div>
     <label class="check" for="f-zeros"><input type="checkbox" id="f-zeros"> Ocultar itens sem entrega futura</label>
+    <button class="btn" type="button" id="recarregar" hidden>Atualizar</button>
     <label class="btn" for="arquivo">Importar planilha</label>
     <input id="arquivo" type="file" accept=".csv,.tsv,.txt,.xlsx,.xls" class="sr">
     <button class="btn" type="button" id="copy">Copiar para Excel</button>
@@ -494,7 +496,14 @@ function render(){
   if(DS.quando){var d=new Date(DS.quando);m+="<div>Atualizado em<b>"+p2(d.getDate())+"/"+p2(d.getMonth()+1)+"/"+d.getFullYear()+" "+p2(d.getHours())+":"+p2(d.getMinutes())+"</b></div>"}
   $("meta").innerHTML=m;
 }
-function show(ds){DS=ds;N=ds.weeks.length;filtros();$("f-busca").value="";st.q="";render()}
+function show(ds,keep){
+  var c=st.cli,d=st.dia;DS=ds;N=ds.weeks.length;filtros();
+  if(keep){
+    if(DS.clientes.some(function(x){return ckey(x)===c})){st.cli=c;$("f-cliente").value=c}
+    if(DS.clientes.some(function(x){return x.dia===d})){st.dia=d;$("f-dia").value=d}
+  }else{$("f-busca").value="";st.q=""}
+  render();
+}
 function tsv(){
   var L=[["Cliente","Tipo de pedido","Dia","Período","Código","Variedade"].concat(DS.weeks.map(function(w){return w.s+"/"+w.a})).join("\t")];
   visible().forEach(function(d){d.pedidos.forEach(function(pp){pp.itens.forEach(function(it){
@@ -504,11 +513,17 @@ function tsv(){
 }
 
 /* ===== ações ===== */
-function carregarBanco(){
-  say("Carregando a programação…");
-  return Promise.all([fetchAll(),lastLoad()]).then(function(r){say("");show(build(r[0],"banco",r[1]&&r[1].criado_em))},function(e){
-    if(e.message==="sessao"){sair();return}say(e.message)});
+function carregarBanco(quieto){
+  if(!quieto)say("Carregando a programação…");
+  return Promise.all([fetchAll(),lastLoad()]).then(function(r){
+    var q=r[1]&&r[1].criado_em,novo=quieto&&q&&q!==DS.quando;
+    if(!quieto)say("");show(build(r[0],"banco",q),quieto);
+    if(novo)say("Programação atualizada com os dados mais recentes.",8000);
+  },function(e){if(e.message==="sessao"){sair();return}if(!quieto)say(e.message)});
 }
+/* busca dados novos sozinho a cada 5 minutos e quando a pessoa volta para a aba */
+function auto(){if(CFG.url&&sess&&!pendente&&!document.hidden&&DS.origem==="banco")carregarBanco(true)}
+setInterval(auto,300000);document.addEventListener("visibilitychange",auto);
 function salvar(){
   var b=$("salvar");b.disabled=true;say("Salvando…");
   saveRows(DS.rows).then(function(j){pendente=false;say("Programação salva: "+fmt(j.linhas||DS.rows.length)+" linhas.",6000);return carregarBanco()},function(e){b.disabled=false;say(e.message)});
@@ -516,7 +531,7 @@ function salvar(){
 function sair(){sess=null;saveSess();pendente=false;telas()}
 function telas(){
   var precisaLogin=!!CFG.url&&!sess;
-  $("login").hidden=!precisaLogin;$("app").hidden=precisaLogin;$("sair").hidden=!CFG.url||!sess;
+  $("login").hidden=!precisaLogin;$("app").hidden=precisaLogin;$("sair").hidden=!CFG.url||!sess;$("recarregar").hidden=!CFG.url;
   if(precisaLogin){$("l-senha").value="";$("l-email").focus()}
 }
 $("arquivo").addEventListener("change",function(e){
@@ -532,6 +547,7 @@ $("login-form").addEventListener("submit",function(e){
   login($("l-email").value.trim(),$("l-senha").value).then(function(){b.disabled=false;telas();carregarBanco()},function(err){b.disabled=false;m.textContent=err.message});
 });
 $("sair").addEventListener("click",sair);
+$("recarregar").addEventListener("click",function(){pendente=false;carregarBanco(true).then(function(){if(!$("msg").textContent)say("Você já está vendo os dados mais recentes.",5000)})});
 $("f-cliente").addEventListener("change",function(e){st.cli=e.target.value;render()});
 $("f-dia").addEventListener("change",function(e){st.dia=e.target.value;render()});
 $("f-busca").addEventListener("input",function(e){st.q=e.target.value.trim();render()});
