@@ -160,7 +160,7 @@ label.btn{display:inline-flex;align-items:center}
 .card .btn{margin-top:12px}
 #l-msg{color:var(--down);font-size:13px;min-height:1.2em}
 main[hidden]{display:none}
-.note[hidden],.btn[hidden],.field[hidden]{display:none}
+.note[hidden],.btn[hidden],.field[hidden],nav[hidden]{display:none}
 </style>
 </head>
 <body>
@@ -472,7 +472,7 @@ function note(){
 function equipe(){return !CFG.url||(eu&&eu.papel==="equipe")}
 function papeis(){
   var e=equipe();
-  document.querySelector('label[for="arquivo"]').hidden=!e;$("f-cliente").hidden=!e&&DS.clientes.length<2;
+  document.querySelector('label[for="arquivo"]').hidden=!e;document.querySelector(".bar nav").hidden=!e;if(!e&&st.view!=="por-cliente"){st.view="por-cliente"}$("f-cliente").hidden=!e&&DS.clientes.length<2;
 }
 function filtros(){
   var sel=$("f-cliente"),dias=[];
@@ -496,7 +496,7 @@ function render(){
   if(N){t+='<div class="tile"><span>Semana '+DS.weeks[0].s+" (base)</span><b>"+fmt(out.total[0])+"</b><i>estacas</i></div>";
     if(N>1)t+='<div class="tile"><span>Semana '+DS.weeks[1].s+"</span><b>"+fmt(out.total[1])+"</b><i>estacas</i></div>";
     t+='<div class="tile"><span>Total em '+N+" semana"+(N>1?"s":"")+"</span><b>"+fmt(sum)+"</b><i>estacas</i></div>"+
-      '<div class="tile"><span>Clientes</span><b>'+data.length+"</b></div>"+'<div class="tile"><span>Variedades</span><b>'+Object.keys(vars).length+"</b></div>"}
+      (equipe()?'<div class="tile"><span>Clientes</span><b>'+data.length+"</b></div>":"")+'<div class="tile"><span>Variedades</span><b>'+Object.keys(vars).length+"</b></div>"}
   $("tiles").innerHTML=t;
   var m="";
   if(N)m+="<div>Base<b>"+DS.weeks[0].s+" · "+DS.weeks[0].a+"</b></div><div>Horizonte<b>"+N+" semana"+(N>1?"s":"")+"</b></div>";
