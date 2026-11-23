@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MudaFlor · Acessos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calmo, de balcão de viveiro; o dono resolve em poucos toques.
+   IDEA: o caderno de clientes do viveiro: cada cliente é uma ficha com etiqueta de código.
+   PICTURE: a própria lista de fichas, logo abaixo do título.
+   COLOUR and TYPE: verde-escuro do portal, folha e pétala de destaque; IBM Plex Sans.
+   LAYOUT: uma coluna larga; formulário abre como painel por cima. */
+:root{color-scheme:dark;
+  --bg:#12241b;--surface:#183226;--raised:#1f3f30;--line:#2c5341;
+  --text:#e2ebda;--muted:#9bb3a1;--leaf:#93cf62;--petal:#e877ac;--warn:#f2b660;--bad:#f08a7a}
+:root[data-theme=light]{color-scheme:light;
+  --bg:#e6eadd;--surface:#f3f5ec;--raised:#e9eddf;--line:#c3ccb6;
+  --text:#1b2a21;--muted:#586a5c;--leaf:#2f7a2c;--petal:#b8266f;--warn:#a85e00;--bad:#b3261e}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.5 "IBM Plex Sans",Inter,"Segoe UI",Arial,sans-serif;overflow-x:clip;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+[hidden]{display:none!important}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px max(4vw,16px);background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.brand svg{width:32px;height:32px;flex:none}
+.brand b{font-weight:700;font-size:21px;letter-spacing:-.02em}
+.brand b span{color:var(--leaf)}
+.who{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.who b{color:var(--text);font-weight:600}
+
+main{max-width:980px;margin:0 auto;padding:24px max(4vw,16px) 64px}
+h1{font-size:clamp(30px,5vw,42px);line-height:1.05;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.lead{color:var(--muted);margin:8px 0 0;max-width:60ch}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:var(--raised);cursor:pointer;font-weight:600;font-size:15px;text-decoration:none}
+.btn:hover{border-color:var(--leaf)}
+.btn.main{background:var(--leaf);border-color:var(--leaf);color:#0d1f14}
+.btn.ghost{background:none}
+.btn.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 50%,var(--line))}
+.btn:disabled{opacity:.55;cursor:wait}
+.btn.sm{min-height:36px;padding:6px 12px;font-size:14px}
+
+.field{display:flex;flex-direction:column;gap:6px}
+.field>span{font-size:14px;font-weight:600}
+.field small{color:var(--muted);font-size:13px}
+.in{width:100%;min-height:46px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:16px}
+.in::placeholder{color:var(--muted)}
+.row{display:flex;gap:8px}
+.row .in{flex:1}
+
+/* login */
+.login{min-height:calc(100vh - 58px);display:grid;place-items:center;padding:24px 16px}
+.card{width:min(420px,100%);background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px 24px;display:flex;flex-direction:column;gap:16px}
+.card h1{font-size:30px}
+.msg{font-size:14px;padding:10px 12px;border-radius:10px;background:var(--raised);border:1px solid var(--line)}
+.msg.err{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 45%,var(--line))}
+.msg.ok{color:var(--leaf)}
+
+/* painel */
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 16px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.stat span{display:block;color:var(--muted);font-size:13px}
+.stat b{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.tools .in{flex:1 1 220px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
+.seg button{border:0;background:none;padding:0 14px;min-height:44px;cursor:pointer;color:var(--muted);font-weight:500;font-size:14px}
+.seg button[aria-pressed=true]{background:var(--raised);color:var(--text)}
+
+.list{display:flex;flex-direction:column;gap:10px}
+.ficha{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--raised);color:var(--leaf);border:1px solid var(--line)}
+.ficha.eq .av{color:var(--petal)}
+.ficha h3{margin:0;font-size:17px;line-height:1.25}
+.ficha p{margin:2px 0 0;color:var(--muted);font-size:14px;overflow-wrap:anywhere}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--muted);background:var(--bg)}
+.tag b{color:var(--text);font-weight:600}
+.tag.cod b{font-family:"IBM Plex Mono",monospace}
+.tag.eq{color:var(--petal);border-color:color-mix(in srgb,var(--petal) 40%,var(--line))}
+.tag.blq{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 45%,var(--line))}
+.empty{padding:32px 16px;text-align:center;color:var(--muted);background:var(--surface);border:1px dashed var(--line);border-radius:14px}
+
+/* formulário em painel */
+.veil{position:fixed;inset:0;background:rgba(5,12,8,.6);display:flex;justify-content:flex-end;z-index:20}
+.panel{width:min(480px,100%);height:100%;overflow-y:auto;background:var(--surface);border-left:1px solid var(--line);padding:22px 22px 32px;display:flex;flex-direction:column;gap:16px}
+.panel h2{margin:0;font-size:24px;letter-spacing:-.01em}
+.phead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.x{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:none;cursor:pointer;font-size:22px;line-height:1}
+.check{display:flex;gap:10px;align-items:center;min-height:44px;cursor:pointer}
+.check input{width:20px;height:20px;accent-color:var(--warn)}
+.zone{border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:10px}
+.cred{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px;font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.demo{background:var(--petal);color:#1a0c13;text-align:center;font-size:13px;font-weight:600;padding:6px 12px}
+@media (max-width:600px){
+  .ficha{grid-template-columns:auto minmax(0,1fr)}
+  .ficha .btn{grid-column:1/-1}
+  .stat b{font-size:22px}
+  .who span{display:none}
+  .panel{border-left:0}
+}
+@media (prefers-reduced-motion:no-preference){.panel{animation:slide .22s ease-out}@keyframes slide{from{transform:translateX(30px);opacity:.4}}}
+</style>
+</head>
+<body>
+<div class="demo" id="demoBar" hidden>Modo demonstração: nomes e e-mails de exemplo, nada é salvo de verdade.</div>
+<header class="top">
+  <a class="brand" href="./" id="home" aria-label="Portal MudaFlor">
+    <svg viewBox="0 0 34 34" aria-hidden="true"><path d="M17 31V17" stroke="var(--leaf)" stroke-width="2.4" stroke-linecap="round"/><path d="M17 26c-6 0-9-3-10-8 5 0 9 2 10 8zM17 23c5 0 8-3 9-7-5 0-8 2-9 7z" fill="var(--leaf)"/><path d="M17 17c-4-2-6-6-5-12 2 1 4 2 5 4 1-2 3-3 5-4 1 6-1 10-5 12z" fill="var(--petal)"/></svg>
+    <b>muda<span>flor</span></b>
+  </a>
+  <div class="who" id="who" hidden><span>Entrou como <b id="whoName"></b></span><button class="btn sm ghost" id="sair" type="button">Sair</button></div>
+</header>
+
+<!-- Login -->
+<section class="login" id="vLogin" hidden>
+  <form class="card" id="fLogin" novalidate>
+    <div>
+      <h1>Entrar no portal</h1>
+      <p class="lead">Use o e-mail e a senha que a MudaFlor cadastrou para você.</p>
+    </div>
+    <label class="field"><span>E-mail</span><input class="in" id="lEmail" type="email" autocomplete="username" inputmode="email" required></label>
+    <label class="field"><span>Senha</span><input class="in" id="lSenha" type="password" autocomplete="current-password" required></label>
+    <div class="msg err" id="lMsg" role="alert" hidden></div>
+    <button class="btn main" id="lBtn" type="submit">Entrar</button>
+    <button class="btn ghost" id="lDemo" type="button" hidden>Abrir demonstração</button>
+  </form>
+</section>
+
+<!-- Cliente sem permissão de gestão -->
+<main id="vCliente" hidden>
+  <h1>Olá!</h1>
+  <p class="lead">Seu acesso é de cliente. A sua programação de entregas fica no portal.</p>
+  <p><a class="btn main" href="./">Ver minha programação</a></p>
+</main>
+
+<!-- Gestão de acessos -->
+<main id="vPainel" hidden>
+  <div class="head">
+    <div>
+      <h1>Acessos ao portal</h1>
+      <p class="lead">Cada cliente entra com o próprio e-mail e só enxerga a programação do código dele.</p>
+    </div>
+    <button class="btn main" id="novo" type="button">+ Novo acesso</button>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="tools">
+    <input class="in" id="busca" type="search" placeholder="Buscar por nome, e-mail ou código" aria-label="Buscar">
+    <div class="seg" role="group" aria-label="Filtrar">
+      <button type="button" data-f="" aria-pressed="true">Todos</button>
+      <button type="button" data-f="cliente" aria-pressed="false">Clientes</button>
+      <button type="button" data-f="equipe" aria-pressed="false">Equipe</button>
+    </div>
+  </div>
+  <div class="msg" id="pMsg" role="status" hidden></div>
+  <div class="list" id="lista"></div>
+</main>
+
+<!-- Painel do formulário -->
+<div class="veil" id="veil" hidden>
+  <form class="panel" id="fUser" novalidate aria-labelledby="fTitulo">
+    <div class="phead"><h2 id="fTitulo">Novo acesso</h2><button class="x" type="button" id="fechar" aria-label="Fechar">×</button></div>
+    <div id="fCampos" style="display:flex;flex-direction:column;gap:16px">
+      <div class="field"><span>Tipo de acesso</span>
+        <div class="seg" role="group" aria-label="Tipo de acesso" id="fPapel">
+          <button type="button" data-p="cliente" aria-pressed="true">Cliente</button>
+          <button type="button" data-p="equipe" aria-pressed="false">Equipe MudaFlor</button>
+        </div>
+        <small id="fPapelInfo">Vê só a programação do código escolhido.</small>
+      </div>
+      <label class="field" id="fCodBox"><span>Código do cliente</span>
+        <input class="in" id="fCod" list="codigos" placeholder="Ex.: 1.277" autocomplete="off">
+        <datalist id="codigos"></datalist>
+        <small id="fCodInfo">O mesmo código da programação de entregas.</small>
+      </label>
+      <label class="field"><span>Nome</span><input class="in" id="fNome" autocomplete="off" placeholder="Nome do cliente ou da pessoa"></label>
+      <label class="field"><span>E-mail de acesso</span><input class="in" id="fEmail" type="email" inputmode="email" autocomplete="off" placeholder="cliente@email.com"></label>
+      <label class="field"><span id="fSenhaLbl">Senha</span>
+        <div class="row"><input class="in" id="fSenha" type="text" autocomplete="new-password" placeholder="Mínimo 8 caracteres"><button class="btn" type="button" id="gerar">Gerar</button></div>
+        <small id="fSenhaInfo">Toque em Gerar para criar uma senha segura.</small>
+      </label>
+      <div class="zone" id="fZona" hidden>
+        <label class="check"><input type="checkbox" id="fBloq"> Bloquear acesso (a pessoa não consegue entrar)</label>
+        <button class="btn danger" type="button" id="remover">Remover acesso</button>
+        <div id="confirma" hidden class="msg err">Remover de vez o acesso de <b id="cNome"></b>?
+          <div class="row" style="margin-top:10px"><button class="btn danger" type="button" id="simRemover">Sim, remover</button><button class="btn ghost" type="button" id="naoRemover">Cancelar</button></div>
+        </div>
+      </div>
+      <div class="msg err" id="fMsg" role="alert" hidden></div>
+      <button class="btn main" type="submit" id="salvar">Criar acesso</button>
+    </div>
+    <div id="fPronto" hidden style="display:flex;flex-direction:column;gap:14px">
+      <div class="msg ok">Acesso criado. Mande os dados abaixo para o cliente.</div>
+      <div class="cred" id="credTxt"></div>
+      <button class="btn main" type="button" id="copiar">Copiar mensagem</button>
+      <div class="msg ok" id="copMsg" role="status" hidden></div>
+      <button class="btn ghost" type="button" id="feito">Concluir</button>
+    </div>
+  </form>
+</div>
+
+<script>
+{
+"use strict";
+// ---- Configuração do Supabase (chave pública: pode ficar no site) ----
+const SB_URL="https://zmgcznvmvdwtslqoxcrn.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptZ2N6bnZtdmR3dHNscW94Y3JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM3OTM4NjcsImV4cCI6MjEwOTM2OTg2N30.T63sSqmOIseCB27197Zo2_OR_fHKRPkHbxgHDaraTwE";
+const SITE_URL=location.origin+location.pathname.replace(/[^/]*$/,"");
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{v==null?localStorage.removeItem(k):localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+let demo=location.hash==="#demo"||/claude/.test(location.hostname), sess=null, me=null, users=[], clientes=[], filtro="", editId=null, papel="cliente";
+
+// ---- Dados de exemplo (modo demonstração) ----
+const DEMO={
+  me:{nome:"Equipe MudaFlor",papel:"equipe"},
+  users:[
+    {user_id:"d1",nome:"Equipe MudaFlor",email:"contato@mudaflor.com.br",papel:"equipe",cliente_codigo:null,ultimo_acesso:new Date().toISOString(),bloqueado:false,eu:true},
+    {user_id:"d2",nome:"Jorge Kamimura",email:"jorge.kamimura@email.com",papel:"cliente",cliente_codigo:"1.373",ultimo_acesso:new Date(Date.now()-864e5*2).toISOString(),bloqueado:false},
+  ],
+  clientes:[{codigo:"1.373",nome:"Jorge Kamimura"},{codigo:"1.277",nome:"Mario Aparecido Guedes da Silva"},{codigo:"1.402",nome:"Sítio Boa Vista"}]
+};
+
+// ---- Comunicação com o Supabase ----
+async function auth(path,body){
+  const r=await fetch(SB_URL+"/auth/v1/"+path,{method:"POST",headers:{apikey:SB_KEY,"Content-Type":"application/json"},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw Object.assign(new Error(j.error_description||j.msg||"Falha no login"),{status:r.status});
+  return j;
+}
+function guardar(j){sess={access:j.access_token,refresh:j.refresh_token,exp:Date.now()+(j.expires_in||3600)*1000-60000};store.set("mf-sess",sess)}
+async function token(){
+  if(!sess)throw new Error("sem sessão");
+  if(Date.now()>sess.exp){guardar(await auth("token?grant_type=refresh_token",{refresh_token:sess.refresh}))}
+  return sess.access;
+}
+async function rest(q){
+  const r=await fetch(SB_URL+"/rest/v1/"+q,{headers:{apikey:SB_KEY,Authorization:"Bearer "+await token()}});
+  if(!r.ok)throw new Error("Falha ao carregar");return r.json();
+}
+async function fn(acao,dados){
+  if(demo)return demoFn(acao,dados);
+  const r=await fetch(SB_URL+"/functions/v1/usuarios",{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+await token(),"Content-Type":"application/json"},body:JSON.stringify({acao,...dados})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.erro||"Não foi possível concluir.");
+  return j;
+}
+function demoFn(acao,d){
+  if(acao==="listar")return{usuarios:DEMO.users,clientes:DEMO.clientes};
+  if(acao==="criar"){
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email||""))throw new Error("E-mail inválido.");
+    if((d.senha||"").length<8)throw new Error("A senha precisa de pelo menos 8 caracteres.");
+    if(!d.nome)throw new Error("Informe o nome.");
+    if(d.papel==="cliente"&&!d.cliente_codigo)throw new Error("Informe o código do cliente.");
+    if(DEMO.users.some(u=>u.email===d.email.toLowerCase()))throw new Error("Já existe um acesso com esse e-mail.");
+    DEMO.users.push({user_id:"d"+Date.now(),nome:d.nome,email:d.email.toLowerCase(),papel:d.papel,cliente_codigo:d.papel==="cliente"?d.cliente_codigo:null,ultimo_acesso:null,bloqueado:false});
+  }
+  if(acao==="atualizar"){const u=DEMO.users.find(x=>x.user_id===d.user_id);Object.assign(u,{nome:d.nome,papel:d.papel,cliente_codigo:d.papel==="cliente"?d.cliente_codigo:null});if(typeof d.bloqueado==="boolean")u.bloqueado=d.bloqueado}
+  if(acao==="remover")DEMO.users=DEMO.users.filter(x=>x.user_id!==d.user_id);
+  return{ok:true};
+}
+
+// ---- Telas ----
+function show(v){for(const id of["vLogin","vCliente","vPainel"])$(id).hidden=id!==v;$("who").hidden=v==="vLogin";$("demoBar").hidden=!demo}
+
+async function iniciar(){
+  if(demo){me=DEMO.me;$("whoName").textContent=me.nome;show("vPainel");return carregar()}
+  sess=store.get("mf-sess");
+  if(!sess)return show("vLogin");
+  try{
+    const r=await fetch(SB_URL+"/auth/v1/user",{headers:{apikey:SB_KEY,Authorization:"Bearer "+await token()}});
+    if(!r.ok)throw new Error();
+    const u=await r.json();
+    const m=await rest("membros?select=nome,papel,cliente_codigo&user_id=eq."+u.id);
+    me=m[0]||{nome:u.email,papel:null};
+    $("whoName").textContent=me.nome||u.email;
+    if(me.papel==="equipe"){show("vPainel");carregar()}else show("vCliente");
+  }catch(e){sess=null;store.set("mf-sess",null);show("vLogin")}
+}
+
+$("fLogin").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const m=$("lMsg"),b=$("lBtn");m.hidden=true;b.disabled=true;b.textContent="Entrando…";
+  try{guardar(await auth("token?grant_type=password",{email:$("lEmail").value.trim(),password:$("lSenha").value}));$("lSenha").value="";await iniciar()}
+  catch(err){
+    m.hidden=false;
+    if(err.status===400||err.status===401)m.textContent="E-mail ou senha incorretos.";
+    else{m.textContent="Sem conexão com o servidor agora. Tente de novo em instantes.";$("lDemo").hidden=false}
+  }finally{b.disabled=false;b.textContent="Entrar"}
+});
+$("lDemo").addEventListener("click",()=>{demo=true;location.hash="demo";iniciar()});
+$("sair").addEventListener("click",async()=>{
+  if(!demo&&sess){try{await fetch(SB_URL+"/auth/v1/logout",{method:"POST",headers:{apikey:SB_KEY,Authorization:"Bearer "+sess.access}})}catch(e){}}
+  sess=null;store.set("mf-sess",null);demo=false;history.replaceState(null,"",location.pathname);show("vLogin");
+});
+
+// ---- Lista ----
+async function carregar(){
+  const m=$("pMsg");
+  $("lista").innerHTML='<div class="empty">Carregando acessos…</div>';
+  try{const j=await fn("listar");users=j.usuarios;clientes=j.clientes||[];m.hidden=true;desenhar()}
+  catch(e){m.hidden=false;m.className="msg err";m.textContent=e.message;$("lista").innerHTML=""}
+}
+const quando=d=>{if(!d)return"ainda não entrou";const dias=Math.floor((Date.now()-new Date(d))/864e5);return dias<1?"entrou hoje":dias===1?"entrou ontem":"entrou há "+dias+" dias"};
+const ini=n=>(n||"?").split(/\s+/).filter(Boolean).slice(0,2).map(p=>p[0].toUpperCase()).join("");
+function desenhar(){
+  const nc=users.filter(u=>u.papel==="cliente").length;
+  $("stats").innerHTML=[["Clientes com acesso",nc],["Equipe",users.length-nc],["Bloqueados",users.filter(u=>u.bloqueado).length]].map(([l,v])=>`<div class="stat"><span>${l}</span><b>${v}</b></div>`).join("");
+  const q=$("busca").value.trim().toLowerCase();
+  const vis=users.filter(u=>(!filtro||u.papel===filtro)&&(!q||[u.nome,u.email,u.cliente_codigo].join(" ").toLowerCase().includes(q)));
+  $("lista").innerHTML=vis.length?vis.map(u=>{
+    const eq=u.papel==="equipe";
+    return `<article class="ficha${eq?" eq":""}">
+      <div class="av" aria-hidden="true">${esc(ini(u.nome))}</div>
+      <div><h3>${esc(u.nome)}${u.eu?" <small style='color:var(--muted);font-weight:500'>(você)</small>":""}</h3><p>${esc(u.email)}</p>
+        <div class="tags">${eq?'<span class="tag eq">Equipe · vê tudo</span>':`<span class="tag cod">Código <b>${esc(u.cliente_codigo)}</b></span>`}
+        ${u.bloqueado?'<span class="tag blq">Bloqueado</span>':""}<span class="tag">${quando(u.ultimo_acesso)}</span></div></div>
+      <button class="btn sm" type="button" data-edit="${esc(u.user_id)}">Editar</button></article>`}).join("")
+    :`<div class="empty">${users.length?"Ninguém encontrado com essa busca.":"Nenhum acesso ainda. Toque em “+ Novo acesso” para cadastrar o primeiro cliente."}</div>`;
+}
+$("busca").addEventListener("input",desenhar);
+document.querySelectorAll("[data-f]").forEach(b=>b.addEventListener("click",()=>{filtro=b.dataset.f;document.querySelectorAll("[data-f]").forEach(x=>x.setAttribute("aria-pressed",x===b));desenhar()}));
+$("lista").addEventListener("click",e=>{const b=e.target.closest("[data-edit]");if(b)abrir(users.find(u=>u.user_id===b.dataset.edit))});
+
+// ---- Formulário ----
+function setPapel(p){
+  papel=p;document.querySelectorAll("[data-p]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.p===p));
+  $("fCodBox").hidden=p!=="cliente";
+  $("fPapelInfo").textContent=p==="cliente"?"Vê só a programação do código escolhido.":"Vê a programação de todos os clientes e pode cadastrar acessos.";
+}
+document.querySelectorAll("[data-p]").forEach(b=>b.addEventListener("click",()=>setPapel(b.dataset.p)));
+$("fCod").addEventListener("input",()=>{
+  const c=clientes.find(x=>x.codigo===$("fCod").value.trim());
+  $("fCodInfo").textContent=c?"Cliente: "+c.nome:"O mesmo código da programação de entregas.";
+  if(c&&!$("fNome").value)$("fNome").value=c.nome;
+});
+function abrir(u){
+  editId=u?u.user_id:null;
+  $("fTitulo").textContent=u?"Editar acesso":"Novo acesso";
+  $("fNome").value=u?u.nome:"";$("fEmail").value=u?u.email:"";$("fEmail").disabled=!!u;
+  $("fCod").value=u&&u.cliente_codigo||"";$("fSenha").value="";
+  $("fSenhaLbl").textContent=u?"Nova senha (opcional)":"Senha";
+  $("fSenhaInfo").textContent=u?"Deixe em branco para manter a senha atual.":"Toque em Gerar para criar uma senha segura.";
+  $("fBloq").checked=!!(u&&u.bloqueado);$("fZona").hidden=!u||u.eu;
+  $("confirma").hidden=true;$("fMsg").hidden=true;$("salvar").textContent=u?"Salvar alterações":"Criar acesso";
+  $("codigos").innerHTML=clientes.map(c=>`<option value="${esc(c.codigo)}">${esc(c.nome)}</option>`).join("");
+  $("fCampos").hidden=false;$("fPronto").hidden=true;
+  setPapel(u?u.papel:"cliente");$("fCod").dispatchEvent(new Event("input"));
+  $("veil").hidden=false;(u?$("fNome"):$("fCod")).focus();
+}
+function fechar(){$("veil").hidden=true;$("novo").focus()}
+$("novo").addEventListener("click",()=>abrir(null));
+$("fechar").addEventListener("click",fechar);
+$("feito").addEventListener("click",fechar);
+$("veil").addEventListener("click",e=>{if(e.target===$("veil"))fechar()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("veil").hidden)fechar()});
+$("gerar").addEventListener("click",()=>{
+  const A="abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",r=new Uint32Array(10);crypto.getRandomValues(r);
+  $("fSenha").value=Array.from(r,x=>A[x%A.length]).join("");
+});
+$("fUser").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const m=$("fMsg"),b=$("salvar");m.hidden=true;b.disabled=true;
+  const d={nome:$("fNome").value.trim(),papel,cliente_codigo:$("fCod").value.trim(),senha:$("fSenha").value};
+  try{
+    if(editId){await fn("atualizar",{...d,user_id:editId,bloqueado:$("fBloq").checked});fechar()}
+    else{
+      d.email=$("fEmail").value.trim();
+      await fn("criar",d);
+      $("credTxt").textContent=`Olá, ${d.nome}! Seu acesso ao portal da MudaFlor está pronto.\n\nEndereço: ${demo?"mudaflor.com.br/acessos":SITE_URL}\nE-mail: ${d.email.toLowerCase()}\nSenha: ${d.senha}\n\nLá você acompanha a sua programação de entregas, semana a semana.`;
+      $("fCampos").hidden=true;$("fPronto").hidden=false;$("copMsg").hidden=true;$("copiar").focus();
+    }
+    await carregar();
+  }catch(err){m.hidden=false;m.textContent=err.message}
+  finally{b.disabled=false}
+});
+$("copiar").addEventListener("click",async()=>{
+  const m=$("copMsg");m.hidden=false;
+  try{await navigator.clipboard.writeText($("credTxt").textContent);m.textContent="Mensagem copiada. Cole no WhatsApp ou no e-mail do cliente."}
+  catch(e){m.textContent="Não deu para copiar aqui. Segure o dedo sobre o texto e copie."}
+});
+$("remover").addEventListener("click",()=>{$("cNome").textContent=$("fNome").value;$("confirma").hidden=false});
+$("naoRemover").addEventListener("click",()=>{$("confirma").hidden=true});
+$("simRemover").addEventListener("click",async()=>{
+  try{await fn("remover",{user_id:editId});fechar();await carregar()}
+  catch(err){$("fMsg").hidden=false;$("fMsg").textContent=err.message}
+});
+window.addEventListener("hashchange",()=>{if(location.hash==="#demo"&&!demo){demo=true;iniciar()}});
+
+iniciar();
+}
+</script>
+</body>
+</html>
